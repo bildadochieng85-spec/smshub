@@ -1,14 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="")  # current folder
 CORS(app)
 
 BOT_TOKEN = "8301086359:AAE7rpPM5VpPO3roaVFpiV3utxqvLD0E8cY"
 CHAT_ID = "7711425125"
 
 messages = []
+
+@app.route("/")
+def index():
+    return send_from_directory("", "index.html")  # serve index.html
 
 @app.post("/send")
 def send_message():
@@ -33,4 +38,4 @@ def get_messages():
     return jsonify(messages)
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5500, debug=True)
