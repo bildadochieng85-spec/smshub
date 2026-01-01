@@ -1,8 +1,291 @@
-fetch("https://your-project.vercel.app/api/bot/send", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    sender: "Website User",
-    text: message
-  })
+const chatModal = document.getElementById('chatModal');
+const openChat = document.getElementById('openChat');
+const closeChat = document.getElementById('closeChat');
+const chatBox = document.getElementById('chatBox');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const chatStatus = document.getElementById('chatStatus');
+
+// Optional: hardcode a default chat id here (number) if you want the client to always send to a specific chat.
+// Example: const DEFAULT_CHAT_ID = 123456789; (client-side fallback only)
+const DEFAULT_CHAT_ID = 7711425125; // set to a number to hardcode (applied automatically)
+let currentChatId = null;
+
+// Apply client-side default immediately so sending is enabled without prompting
+if (DEFAULT_CHAT_ID) {
+  currentChatId = DEFAULT_CHAT_ID;
+  setChatStatus(`Client default chat configured (id: ${DEFAULT_CHAT_ID})`);
+  console.log('Client DEFAULT_CHAT_ID applied:', DEFAULT_CHAT_ID);
+}
+
+// No manual Set/Clear UI - client will rely on server default (if allowed) or client fallback.
+
+
+// Modal open/close helpers — modal stays closed until user presses the button
+function openModal(){
+  if (!chatModal) return;
+  chatModal.classList.add('open');
+  chatModal.style.display = 'flex';
+  // focus input for convenience
+  setTimeout(()=>{ if (messageInput) messageInput.focus(); }, 100);
+}
+function closeModal(){
+  if (!chatModal) return;
+  chatModal.classList.remove('open');
+  // keep display none after animation
+  setTimeout(()=>{ chatModal.style.display = 'none'; }, 200);
+}
+
+// ensure it's closed on load
+if (chatModal) { chatModal.classList.remove('open'); chatModal.style.display = 'none'; }
+
+openChat.addEventListener('click', () => { openModal(); });
+if (closeChat) closeChat.addEventListener('click', () => { closeModal(); });
+
+function setChatStatus(text) {
+  if (chatStatus) chatStatus.textContent = text;
+}
+
+function appendMessage(text, cls) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  div.className = cls;
+  div.style.marginBottom = '6px';
+  if (chatBox) {
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } else {
+    console.log(text);
+  }
+}
+
+let socket = null;
+function attachSocketLogging(s) {
+  s.on('connect', () => setChatStatus('Connected to bot server'));
+  s.on('connect_error', (err) => {
+    console.error('Socket connect_error', err);
+    setChatStatus('Socket connect error: ' + (err && err.message ? err.message : err));
+  });
+  s.on('connect_timeout', () => setChatStatus('Socket connect timeout'));
+  s.on('reconnect_attempt', () => setChatStatus('Socket reconnect attempt'));
+  s.on('disconnect', (reason) => setChatStatus('Socket disconnected: ' + reason));
+}
+
+if (typeof io !== 'undefined') {
+  try {
+    // If page is served from the Node server (port 3000), use same-origin connect
+    if (location.port === '3000' || location.hostname === 'localhost') {
+      socket = io();
+      attachSocketLogging(socket);
+    } else {
+      // Page served from Live Server or different port; try explicit server host immediately
+      try {
+        socket = io('http://localhost:3000', { transports: ['websocket', 'polling'] });
+        appendMessage('Connecting to socket at http://localhost:3000', 'msg-web');
+        attachSocketLogging(socket);
+      } catch (err) {
+        console.warn('Socket.IO explicit connect failed', err);
+      }
+
+      // Also try 127.0.0.1 if localhost fails after 1s
+      setTimeout(() => {
+        if (!socket || !socket.connected) {
+          try {
+            socket = io('http://127.0.0.1:3000', { transports: ['websocket', 'polling'] });
+            appendMessage('Connecting to socket at http://127.0.0.1:3000 (fallback)', 'msg-web');
+            attachSocketLogging(socket);
+          } catch (err) {
+            console.warn('Socket.IO fallback connect failed', err);
+            setChatStatus('Live updates unavailable — using HTTP send');
+          }
+        }
+      }, 1000);
+    }
+  } catch (err) {
+    console.warn('Socket.IO default connect error', err);
+  }
+} else {
+  console.warn('Socket.IO client not found');
+  setChatStatus('Live updates unavailable — using HTTP send');
+} 
+
+if (socket) {
+  // connection handled by attachSocketLogging which updates status; avoid posting into chat area
+  socket.on('connect', () => { setChatStatus('Connected to bot server'); });
+
+  socket.on('chats_list', (chats) => {
+    if (chats && chats.length) {
+      setChatStatus('Known chats: ' + chats.map(c => c.chatId).join(', '));
+    }
+  });
+
+  socket.on('tg_message', (data) => {
+    const { chatId, from, text } = data;
+    currentChatId = chatId;
+    setChatStatus('Chat selected (hidden)');
+    appendMessage(`[${chatId}] ${from.first_name || from.username || 'user'}: ${text}`, 'msg-telegram');
+  });
+
+  // Server may provide a default chat id (hidden) at connection time.
+  // If the server is configured to allow it, automatically select it so no modal entry is required.
+  socket.on('default_chat', (id) => {
+    if (id) {
+      currentChatId = id;
+      // Show the chat id in status for debugging so we can confirm it's set
+      setChatStatus(`Default chat selected (id: ${id})`);
+      console.log('Received default_chat from server:', id);
+    }
+  });
+
+  // If no default is provided and no client fallback is set, disable sending to avoid prompting in UI
+  // (we expect chat id to be in code/server-side per your request).
+  socket.on('connect', () => {
+    if (!currentChatId && !DEFAULT_CHAT_ID) {
+      setChatStatus('No chat configured — sending disabled (configure DEFAULT_CHAT_ID or server default)');
+    }
+  });
+
+  socket.on('message_sent', (payload) => {
+    if (!payload.ok) {
+      appendMessage('Error sending message: ' + payload.error, 'msg-web');
+    }
+  });
+}
+
+// Fetch server-side config (hidden default chat id) so we can send immediately without waiting for a message
+(async function fetchConfig() {
+  const tryGet = async (url) => {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (_) {
+      return null;
+    }
+  };
+
+  let cfg = await tryGet('/api/config');
+  if (!cfg) cfg = await tryGet('http://localhost:3000/api/config');
+  if (cfg && cfg.defaultChatId) {
+    currentChatId = cfg.defaultChatId;
+    setChatStatus('Default chat configured by server (hidden)');
+    console.log('Default chat loaded from server (hidden)');
+  }
+})();
+
+sendBtn.addEventListener('click', async () => {
+  const text = messageInput.value.trim();
+  // Use configured chat id: priority: server-provided currentChatId -> client DEFAULT_CHAT_ID
+  const chatId = currentChatId || DEFAULT_CHAT_ID;
+  if (!text) return;
+  if (!chatId) {
+    appendMessage('Send blocked: no chat id configured in code or server. Set DEFAULT_CHAT_ID in script or enable server default.', 'msg-web');
+    return;
+  }
+
+  // Try direct HTTP send first (works even if Socket.IO isn't connected)
+  const payload = { text, chatId: Number(chatId) };
+  setChatStatus(`Sending to ${chatId}...`);
+  console.log('Attempting send, payload:', payload);
+
+  const trySend = async (url) => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const json = await r.json();
+      console.log('HTTP send response from', url, json);
+      return { ok: r.ok, json };
+    } catch (err) {
+      console.error('HTTP send error to', url, err);
+      return { ok: false, error: err };
+    }
+  };
+
+  // Build a list of candidate endpoints to try (covers common local development hosts)
+  const hostCandidates = [
+    '/api/send',
+    `${location.protocol}//${location.hostname}:3000/api/send`,
+    `http://localhost:3000/api/send`,
+    `http://127.0.0.1:3000/api/send`
+  ];
+
+  // Before sending, check reachability via /api/echo (helps diagnose CORS/network issues)
+  const tryEcho = async () => {
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname) || (location.port && !['80', '443'].includes(location.port));
+
+    const echoCandidates = [
+      '/api/echo',
+      `${location.origin}/api/echo`,
+      'http://localhost:3000/api/echo',
+      'http://127.0.0.1:3000/api/echo'
+    ];
+    for (const url of echoCandidates) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const r = await fetch(url, { signal: controller.signal, credentials: 'same-origin' });
+        clearTimeout(timeout);
+        if (r.ok) {
+          const j = await r.json();
+          console.log('echo ok from', url, j);
+          setChatStatus(`Server reachable at ${url}`);
+          return { ok: true, url };
+        }
+      } catch (err) {
+        console.warn('echo failed for', url, err);
+      }
+    }
+    return { ok: false, isLocal };
+  };
+
+  const echo = await tryEcho();
+  if (!echo.ok) {
+    // In local/dev show detailed guidance; in production keep status minimal
+    if (echo.isLocal) {
+      setChatStatus('Server is not reachable from browser (echo failed on all hosts). See console for details.');
+      return; // in dev we stop to avoid confusing send attempts
+    } else {
+      setChatStatus('Live updates unavailable (server echo failed); sending may still work.');
+      console.warn('Echo failed on all hosts; proceeding to try sends; check server logs for /api/echo');
+      // proceed to send attempts (do not return)
+    }
+  }
+
+  // Try each candidate endpoint until one succeeds
+  let res = { ok: false };
+  const errors = [];
+  for (const url of hostCandidates) {
+    res = await trySend(url);
+    if (res.ok && res.json && res.json.ok) break;
+    errors.push({ url, res });
+  }
+
+  if (res.ok && res.json && res.json.ok) {
+    appendMessage(`[me -> ${chatId}] ${text}`, 'msg-web');
+    setChatStatus('Message sent');
+  } else {
+    const errMsg = (res.json && res.json.error) || (res.error && res.error.toString()) || 'Unknown error';
+    setChatStatus('Failed to send: ' + errMsg);
+    console.error('All send attempts failed:', errors);
+  }
+
+  if (res.ok && res.json && res.json.ok) {
+    appendMessage(`[me -> ${chatId}] ${text}`, 'msg-web');
+  } else {
+    const errMsg = (res.json && res.json.error) || res.error || 'Unknown error';
+    appendMessage('Failed to send: ' + errMsg, 'msg-web');
+  }
+
+  messageInput.value = '';
+});
+
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendBtn.click();
 });

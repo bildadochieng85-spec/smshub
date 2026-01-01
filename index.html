@@ -106,61 +106,30 @@
 </div>
 
     </section>
-    <!-- Floating Chat Button -->
-<button class="chat-btn" onclick="toggleChat()">💬</button>
 
-<!-- Chat Modal -->
-<div class="chat-modal" id="chatBox">
-  <div class="chat-header">Support Chat</div>
-  <div class="chat-body" id="messages"></div>
-  <div class="chat-footer">
-    <input id="msg" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
-<script>
-const API = "/api/bot"; // matches bot.js exactly
+    <!-- Chat widget --> 
+    <button id="openChat" title="Open chat">💬</button>
 
-function toggleChat() {
-  const box = document.getElementById("chatBox");
-  box.style.display = (box.style.display === "flex") ? "none" : "flex";
-}
+    <div class="modal" id="chatModal">
+      <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Telegram Chat</strong>
+          <button id="closeChat">✖</button>
+        </div>
+        <div id="chatBox" aria-live="polite"></div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <input id="messageInput" placeholder="Type a message" style="flex:1;" />
+          <button id="sendBtn">Send</button>
+        </div>
+        <div id="chatStatus" style="margin-top:6px; font-size:12px; color:#666;">No chat selected</div>
+        <div style="margin-top:6px;">
+          <small>Incoming messages from Telegram appear green; web messages are blue.</small>
+        </div>
+      </div>
+    </div>
 
-async function sendMessage() {
-  const input = document.getElementById("msg");
-  const text = input.value.trim();
-  if (!text) return;
-
-  // show message instantly in chat UI
-  addMessage(text, "web");
-
-  try {
-    await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: "Website",
-        text: text
-      })
-    });
-  } catch (err) {
-    console.error("Send failed:", err);
-  }
-
-  input.value = "";
-}
-
-// UI helper (frontend only)
-function addMessage(text, from) {
-  const container = document.getElementById("messages");
-  const div = document.createElement("div");
-  div.className = "message " + from;
-  div.textContent = text;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-</script>
-
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
