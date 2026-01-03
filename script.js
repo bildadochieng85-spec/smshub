@@ -52,18 +52,44 @@ function appendMessage(text, cls) {
   // messages to the status area so the chat shows only conversation.
   if (cls !== 'msg-web' && cls !== 'msg-telegram') {
     setChatStatus(text);
-    return;
+    return null;
   }
 
-  const div = document.createElement('div');
-  div.textContent = text;
-  div.className = cls;
-  div.style.marginBottom = '6px';
+  // Build message element with proper structure for styling and ticks
+  const wrapper = document.createElement('div');
+  wrapper.className = cls + ' msg-wrapper';
+  wrapper.style.marginBottom = '8px';
+  wrapper.style.display = 'flex';
+  wrapper.style.flexDirection = 'column';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg ' + (cls === 'msg-web' ? 'msg-web' : 'msg-telegram');
+  bubble.textContent = text;
+
+  const meta = document.createElement('div');
+  meta.className = 'message-meta';
+  const time = new Date();
+  meta.textContent = time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  // Add tick for web-sent messages
+  if (cls === 'msg-web') {
+    const tick = document.createElement('span');
+    tick.className = 'tick pending';
+    tick.setAttribute('aria-hidden', 'true');
+    tick.textContent = '✓';
+    meta.appendChild(tick);
+  }
+
+  wrapper.appendChild(bubble);
+  wrapper.appendChild(meta);
+
   if (chatBox) {
-    chatBox.appendChild(div);
+    chatBox.appendChild(wrapper);
     chatBox.scrollTop = chatBox.scrollHeight;
+    return wrapper;
   } else {
     console.log(text);
+    return wrapper;
   }
 }
 
@@ -156,6 +182,16 @@ if (socket) {
   socket.on('message_sent', (payload) => {
     if (!payload.ok) {
       setChatStatus('Error sending message: ' + payload.error);
+      return;
+    }
+    setChatStatus('Message delivered by server');
+    // Mark the most recent pending sent message as delivered if present
+    const pendings = document.querySelectorAll('.msg-wrapper .tick.pending');
+    if (pendings && pendings.length) {
+      const pending = pendings[pendings.length - 1];
+      pending.classList.remove('pending');
+      pending.classList.add('delivered');
+      pending.textContent = '✓✓';
     }
   });
 }
@@ -276,12 +312,32 @@ sendBtn.addEventListener('click', async () => {
   }
 
   if (res.ok && res.json && res.json.ok) {
-    appendMessage(`[me -> ${chatId}] ${text}`, 'msg-web');
+    // Append a local-sent message bubble (do NOT show chat id per user preference)
+    const el = appendMessage(text, 'msg-web');
     setChatStatus('Message sent');
+    // Mark tick as delivered (if the send was accepted by server/bot)
+    if (el) {
+      const tick = el.querySelector('.tick');
+      if (tick) {
+        tick.classList.remove('pending');
+        tick.classList.add('delivered');
+        tick.textContent = '✓✓';
+      }
+    }
   } else {
     const errMsg = (res.json && res.json.error) || (res.error && res.error.toString()) || 'Unknown error';
     setChatStatus('Failed to send: ' + errMsg);
     console.error('All send attempts failed:', errors);
+    // Show failed bubble and mark tick as failed
+    const el = appendMessage(text + ' (failed)', 'msg-web');
+    if (el) {
+      const tick = el.querySelector('.tick');
+      if (tick) {
+        tick.classList.remove('pending');
+        tick.classList.add('failed');
+        tick.textContent = '!';
+      }
+    }
   }
 
   messageInput.value = '';

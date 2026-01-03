@@ -82,21 +82,136 @@
             background-color: #192258;
         }
 
-        
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100%;
+            background: #fff;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 3000; /* sit above header and overlay */
+            padding: 20px 15px;
+            overflow-y: auto;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+            z-index: 3000;
+        }
+        .sidebar .close-btn {
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar nav li {
+            margin: 12px 0;
+        }
+        .sidebar nav a {
+            color: #22356f;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 8px;
+            border-radius: 8px;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+        }
+        .sidebar nav a .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #5563a7;
+            flex: 0 0 20px;
+            font-size: 18px;
+        }
+        .sidebar nav a:hover {
+            background: #f1f5ff;
+            color: #0024ff;
+            transform: translateX(3px);
+        }
+        .sidebar nav a.active {
+            background: linear-gradient(90deg,#e9eefc,#dfe8ff);
+            color: #0024ff;
+            box-shadow: inset 0 0 0 1px rgba(0,36,255,0.06);
+        }
+        .badge { background:#e9eefc; color:#0024ff; padding:2px 7px; border-radius:12px; font-size:12px; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease;
+            z-index: 2000; /* below sidebar, above header */
+        }
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* Header stays in normal flow; overlay will dim the whole page when sidebar opens */
+        .header {
+            position: relative;
+            z-index: 1100;
+        }
+        @media (min-width: 900px) {
+            /* Keep sidebar visible on wide screens and hide overlay/menu button */
+            .menu-icon { display: none; }
+            .sidebar {
+                transform: none;
+                position: sticky;
+                top: 0;
+                width: 240px;
+                height: 100vh;
+                box-shadow: none;
+                display: block;
+            }
+            .overlay { display: none; }
+            body { display: flex; }
+            .container { margin-left: 260px; max-width: calc(100% - 260px); }
+        }
     </style>
 </head>
 <body>
     <div class="header"> 
-        <div class="menu-icon"
-        tabindex="0">☰
+        <div class="menu-icon" id="menuIcon" tabindex="0" aria-label="Open menu" aria-expanded="false">☰</div>
+        <div class="logo">
+            <img src="hero.png" alt="">
         </div>
-            <div class="logo">
-                <img src="hero.png" alt="">
-            </div>
-            <div class="wallet">
-       <button>Wallet.Balance:</button>         
-            </div>
+        <div class="wallet">
+            <button>Wallet.Balance:</button>         
+        </div>
     </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="close-btn" id="closeBtn" tabindex="0" aria-label="Close menu">✕</div>
+        <nav>
+            <ul>
+                <li><a href="#" class="nav-link active" aria-current="page"><span class="icon" aria-hidden="true">🏠</span><span class="label">Dashboard</span><span class="badge" aria-hidden="true"></span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📥</span><span class="label">Buy Number</span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">🇺🇸</span><span class="label">Buy USA Number</span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📦</span><span class="label">My Orders</span><span class="badge">0</span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">💳</span><span class="label">My Transactions</span><span class="badge">0</span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">❓</span><span class="label">Support</span></a></li>
+                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">↩️</span><span class="label">Logout</span></a></li>
+            </ul>
+        </nav> 
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
     <div class="container">
         <div class="card">
              <h2>Welcome</h2>
@@ -119,6 +234,70 @@
        </div>
       
        
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var menuIcon = document.getElementById('menuIcon');
+      var sidebar = document.getElementById('sidebar');
+      var closeBtn = document.getElementById('closeBtn');
+      var overlay = document.getElementById('overlay');
+      var navLinks = document.querySelectorAll('.sidebar .nav-link');
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+        sidebar.setAttribute('aria-hidden', 'false');
+        menuIcon.setAttribute('aria-expanded', 'true');
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        sidebar.setAttribute('aria-hidden', 'true');
+        menuIcon.setAttribute('aria-expanded', 'false');
+        menuIcon.focus();
+      }
+
+      menuIcon.addEventListener('click', function (e) { openSidebar(); });
+      menuIcon.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSidebar(); }
+      });
+
+      closeBtn.addEventListener('click', function (e) { closeSidebar(); });
+      closeBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeSidebar(); }
+      });
+
+      overlay.addEventListener('click', closeSidebar);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+          closeSidebar();
+        }
+      });
+
+      // Activate link on click and close on small screens
+      navLinks.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          navLinks.forEach(function (l) { l.classList.remove('active'); l.removeAttribute('aria-current'); });
+          link.classList.add('active');
+          link.setAttribute('aria-current', 'page');
+          // If on small screen, close sidebar after link click
+          if (window.innerWidth < 900) closeSidebar();
+        });
+        link.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); link.click(); }
+        });
+      });
+
+      // Optional: close sidebar when resizing to large screens
+      window.addEventListener('resize', function () {
+        if (window.innerWidth >= 900) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('show');
+          sidebar.setAttribute('aria-hidden', 'false'); // visible on large screens
+          menuIcon.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+    </script>
      
 </body>
 </html>

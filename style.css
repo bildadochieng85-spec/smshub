@@ -311,10 +311,35 @@ a{
 }
 
 .message-meta {
-  display: block;
+  display: flex;
+  gap: 8px;
+  align-items: center;
   font-size: 11px;
   color: #64748b;
-  margin-top: 4px;
+  margin-top: 6px;
+}
+
+/* Tick styles for sent messages */
+.tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 0 6px;
+}
+.tick.pending {
+  color: #94a3b8; /* gray */
+}
+.tick.delivered {
+  color: #0b5fff; /* blue */
+  font-weight: 800;
+}
+.tick.failed {
+  color: #ef4444; /* red */
+  font-weight: 800;
 }
 
 .input-row {
