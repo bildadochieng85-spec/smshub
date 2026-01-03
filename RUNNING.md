@@ -32,6 +32,22 @@ npm start
 
 Server will serve the web UI at `http://localhost:3000` and will connect to Telegram using long polling.
 
+## Automatic send (development)
+To enable automatic outgoing messages while the dev server is running, set `AUTO_SEND=true` in your environment. For safety during development, also set `DRY_RUN=true` so messages are only logged and **not** sent to Telegram.
+
+Optional settings:
+- `AUTO_SEND_INTERVAL_MS` — interval between automatic sends in milliseconds (default: 300000 = 5 minutes).
+
+Example (PowerShell):
+```
+$env:AUTO_SEND='true'; $env:DRY_RUN='true'; npm run dev
+```
+
+Example (cross-platform; may require `cross-env` on Windows):
+```
+AUTO_SEND=true DRY_RUN=true npm run dev
+```
+
 ## How it works
 - When someone messages your Telegram bot, the bot receives it and the server emits `tg_message` via Socket.IO to connected web clients.
 - In the web UI, click the Chat button to open the widget. Incoming messages auto-fill the `Chat ID` box so you can reply.

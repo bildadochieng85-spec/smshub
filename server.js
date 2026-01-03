@@ -142,3 +142,14 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log('Server started on port', PORT));
+
+// Start automatic sender (if enabled via AUTO_SEND=true)
+const { startAutoSend } = require('./lib/auto_send');
+const stopAutoSend = startAutoSend({ bot, defaultChatId: DEFAULT_CHAT_ID, allowDefaultChat: ALLOW_DEFAULT_CHAT });
+if (stopAutoSend) {
+  process.on('SIGINT', () => {
+    console.log('Stopping auto-send');
+    stopAutoSend();
+    process.exit(0);
+  });
+}

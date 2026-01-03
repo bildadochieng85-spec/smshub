@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home page</title>
+    <style>
+        body{
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+        }
+        .header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 10px 15px;
+            box-shadow: 0 2px 5px rgb(0,0,0,0.05);
+        }
+        .menu-icon{
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .logo{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo img{
+            width: 25%;
+        }
+        .wallet button{
+            background-color: #0024ff;
+            color: white;
+            padding: 8px 12px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+        }
+        .container{
+           padding: 20px;
+        }
+        .card{
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgb(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .card h2{
+            margin-top: 0;
+        }
+        .card select{
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius:6px;
+            border: 1px solid #ccc;
+            font-size: 16px
+        }
+        .card button{
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+        }
+        button {
+            background-color: #0024ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        ;
+        }
+        a {
+            color: white;
+            text-decoration: none;
+        }
+        button:hover {
+            background-color: #192258;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="header"> 
+        <div class="menu-icon"
+        tabindex="0">☰
+        </div>
+            <div class="logo">
+                <img src="hero.png" alt="">
+            </div>
+            <div class="wallet">
+       <button>Wallet.Balance:</button>         
+            </div>
+    </div>
+    <div class="container">
+        <div class="card">
+             <h2>Welcome</h2>
+<p>At primeSmshub, verify more for less with ease</p>
+        </div>
+       <div class="card">
+        <h2>Get a New number </h2>
+        </div>
+         <div class="card">
+        <label for="country">Select country</label><br>
+        <select name="" id="">
+        <option value="">Choose a country</option>
+        <option value="">Nigeria</option>
+        <option value="">kenya</option>
+        <option value="">Ghana</option>
+        </select><br><br>
+        <button><a href="">Continue</a></button>
+       </div>
+
+       </div>
+      
+       
+     
+</body>
+</html>
