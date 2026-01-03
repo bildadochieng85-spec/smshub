@@ -32,6 +32,55 @@ npm start
 
 Server will serve the web UI at `http://localhost:3000` and will connect to Telegram using long polling.
 
+## Running as a background service with PM2 (Windows) ✅
+If you want the server to keep running in the background and automatically restart on crashes or reboot, use PM2 (works on Windows).
+
+1. Install PM2 globally (recommended) or use npx:
+
+```
+# global install (requires admin privileges on Windows)
+npm i -g pm2
+
+# or use npx without installing globally
+npx pm2 start ecosystem.config.js --env production --name smshub
+```
+
+2. Start the app with PM2:
+
+```
+# start using the shipped ecosystem file
+npx pm2 start ecosystem.config.js --env production --name smshub
+```
+
+3. Verify the process is running:
+
+```
+npx pm2 list
+```
+
+4. Enable startup on boot (Windows): run the startup command printed by PM2 in an elevated (Administrator) PowerShell or CMD, then save the process list:
+
+```
+# generate startup command (run in an elevated shell if required)
+npx pm2 startup
+
+# run the command that PM2 prints, then save the current process list
+npx pm2 save
+```
+
+5. Manage the process:
+
+```
+# stop
+npx pm2 stop smshub
+# restart
+npx pm2 restart smshub
+# view logs
+npx pm2 logs smshub
+```
+
+> Note: PM2 prints a platform-specific command for `pm2 startup` — on Windows it may request that you run an additional command as Administrator; follow PM2's instructions and then run `npx pm2 save`.
+
 ## Automatic send (development)
 To enable automatic outgoing messages while the dev server is running, set `AUTO_SEND=true` in your environment. For safety during development, also set `DRY_RUN=true` so messages are only logged and **not** sent to Telegram.
 
