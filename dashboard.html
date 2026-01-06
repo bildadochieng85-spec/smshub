@@ -177,7 +177,6 @@
     </div>
 </div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar" aria-hidden="true">
     <div class="close-btn" id="closeBtn" tabindex="0" aria-label="Close menu">✕</div>
     <nav>
@@ -206,7 +205,6 @@
          <p>At primeSmshub, verify more for less with ease</p>
     </div>
 
-    <!-- PAYMENT FORM -->
     <div class="card payment-form">
         <h2>Make a Payment</h2>
 
@@ -224,8 +222,12 @@
         <label for="amount">Enter Amount</label>
         <input type="number" id="amount" placeholder="0.00" min="1" step="0.01" />
 
+        <label for="phoneNumber">Phone Number (Mobile Money)</label>
+        <input type="tel" id="phoneNumber" placeholder="2547XXXXXXXX or 080XXXXXXXX" />
+
         <label for="method">Payment Method</label>
         <select id="method">
+            <option value="card,mobilemoney,mpesa">All Methods (Push Enabled)</option>
             <option value="card">Card</option>
             <option value="banktransfer">Bank Transfer</option>
             <option value="mobilemoney">Mobile Money</option>
@@ -235,20 +237,24 @@
     </div>
 </div>
 
-<!-- FLUTTERWAVE -->
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
+// UPDATED: Points to your Render Backend
+const BACKEND_URL = "https://smshub-ftgg.onrender.com";
+
 document.getElementById('payBtn').addEventListener('click', async () => {
   const countryEl = document.getElementById('country');
   const amountEl = document.getElementById('amount');
   const methodEl = document.getElementById('method');
+  const phoneEl = document.getElementById('phoneNumber');
 
-  const country = countryEl.value;
   const currency = countryEl.selectedOptions[0].dataset.currency;
   const amount = parseFloat(amountEl.value);
   const payment_method = methodEl.value;
+  const phoneNumber = phoneEl.value.trim();
 
   if (!amount || amount <= 0) { alert("Please enter a valid amount"); return; }
+  if (!phoneNumber) { alert("Please enter your phone number to receive the payment push"); return; }
 
   FlutterwaveCheckout({
     public_key: "FLWPUBK_TEST-5a42c6dbc9d723c053a6086ce5225765-X",
@@ -256,14 +262,21 @@ document.getElementById('payBtn').addEventListener('click', async () => {
     amount: amount,
     currency: currency,
     payment_options: payment_method,
-    customer: { email: "customer@example.com", phone_number: "08012345678", name: "John Doe" },
+    customer: { 
+        email: "customer@example.com", 
+        phone_number: phoneNumber, 
+        name: "Customer User" 
+    },
     callback: function (data) {
-      fetch(`/flutterwave/verify/${data.transaction_id}`)
+      // UPDATED: Absolute URL for Render
+      fetch(`${BACKEND_URL}/flutterwave/verify/${data.transaction_id}`)
         .then(res => res.json())
         .then(resp => {
           if (resp.status === "success") {
             alert(`Payment Verified ✅\nAmount: ${resp.data.amount} ${resp.data.currency}`);
-            fetch(`/notify-telegram`, {
+            
+            // UPDATED: Absolute URL for Render
+            fetch(`${BACKEND_URL}/notify-telegram`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -277,7 +290,10 @@ document.getElementById('payBtn').addEventListener('click', async () => {
             alert("Verification Failed ❌");
           }
         })
-        .catch(err => { console.error(err); alert("Server Error ❌"); });
+        .catch(err => { 
+            console.error(err); 
+            alert("Server Error ❌: Please check if your Render backend is live."); 
+        });
     },
     onclose: function () { console.log("Payment modal closed"); }
   });
@@ -311,7 +327,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<!-- Firebase Logout -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";

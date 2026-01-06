@@ -35,7 +35,6 @@ io.on('connection', async socket => {
   const userId = socket.id
   activeWebSockets.set(userId, socket)
 
-  // Welcome message
   const welcomeText = "Hello! Welcome to PrimeSmsHub. How can we help you today?"
   socket.emit('tg_message', { text: welcomeText, from: "Support" })
 
@@ -113,72 +112,63 @@ app.get('/flutterwave/verify/:id', async (req, res) => {
       }
     })
 
-    if (response.data && response.data.status === 'success' && response.data.data) {
+    if (response.data && response.data.status === 'success' && response.data.data.status === 'successful') {
       const data = response.data.data
 
-      // Save to Redis
+      // Check for duplicate transaction in Redis before adding money
       if (redis) {
-        await redis.lpush('payments', JSON.stringify({
-          transaction_id: data.id,
-          amount: data.amount,
-          currency: data.currency,
-          customer: data.customer
-        }))
+        const history = await redis.lrange('payments', 0, -1)
+        const isDuplicate = history.some(p => JSON.parse(p).transaction_id === data.id)
+
+        if (!isDuplicate) {
+          await redis.lpush('payments', JSON.stringify({
+            transaction_id: data.id,
+            amount: data.amount,
+            currency: data.currency,
+            customer: data.customer
+          }))
+
+          // Real-time wallet update via Socket
+          const payments = await redis.lrange('payments', 0, -1)
+          const newBalance = payments.reduce((sum, p) => sum + JSON.parse(p).amount, 0)
+          io.emit('wallet_update', { balance: newBalance })
+        }
       }
 
-      res.json({
-        status: 'success',
-        message: 'Payment verified successfully',
-        data: data
-      })
+      res.json({ status: 'success', data: data })
     } else {
-      res.status(400).json({
-        status: 'error',
-        message: response.data.message || 'Transaction could not be verified',
-        data: response.data.data || null
-      })
+      res.status(400).json({ status: 'error', message: 'Verification failed or payment not successful' })
     }
   } catch (err) {
-    console.error('Flutterwave Verify Error:', err.response ? err.response.data : err.message)
-    res.status(500).json({
-      status: 'error',
-      message: 'Server Error while verifying payment',
-      details: err.response ? err.response.data : err.message
-    })
+    res.status(500).json({ status: 'error', message: 'Server error during verification' })
   }
 })
 
-/* ================= NOTIFY TELEGRAM AFTER PAYMENT ================= */
+/* ================= NOTIFY TELEGRAM (FIXED) ================= */
 app.post('/notify-telegram', async (req, res) => {
   try {
     const { transaction_id, amount, currency, customer } = req.body
+    
     const message =
-      `💰 New Payment Received\n━━━━━━━━━━━━━━━\n` +
-      `Transaction ID: ${transaction_id}\nAmount: ${amount} ${currency}\n` +
-      `Customer: ${customer.name}\nEmail: ${customer.email}\nPhone: ${customer.phone_number}\n━━━━━━━━━━━━━━━`
+      `💰 **NEW PAYMENT VERIFIED**\n━━━━━━━━━━━━━━━\n` +
+      `🆔 **TX ID:** \`${transaction_id}\`\n` +
+      `💵 **Amount:** ${amount} ${currency}\n` +
+      `👤 **Customer:** ${customer.name}\n` +
+      `📧 **Email:** ${customer.email}\n` +
+      `📞 **Phone:** ${customer.phone_number}`
 
-    await bot.sendMessage(DEFAULT_CHAT_ID, message)
-
-    // Save payment to Redis for wallet
-    if (redis) await redis.lpush('payments', JSON.stringify({ transaction_id, amount, currency, customer }))
-
-    // Emit balance update in real-time
-    if (activeWebSockets.size > 0 && redis) {
-      const payments = await redis.lrange('payments', 0, -1)
-      const balance = payments.reduce((sum, p) => sum + JSON.parse(p).amount, 0)
-      activeWebSockets.forEach(socket => socket.emit('wallet_update', { balance }))
-    }
-
+    await bot.sendMessage(DEFAULT_CHAT_ID, message, { parse_mode: 'Markdown' })
     res.json({ ok: true })
-  } catch (err) { res.status(500).json({ ok: false, error: err.message }) }
+  } catch (err) { 
+    res.status(500).json({ ok: false, error: err.message }) 
+  }
 })
 
 /* ================= HEALTH CHECK ================= */
 app.get('/health', (req, res) => {
   res.json({
     server: 'ok',
-    flutterwave_secret_loaded: !!FLW_SECRET_KEY,
-    flutterwave_encryption_loaded: !!FLW_ENCRYPTION_KEY
+    flutterwave_secret_loaded: !!FLW_SECRET_KEY
   })
 })
 
