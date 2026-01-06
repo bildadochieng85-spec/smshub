@@ -1,470 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home page</title>
-    <style>
-        body{
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-        }
-        .header{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff;
-            padding: 10px 15px;
-            box-shadow: 0 2px 5px rgb(0,0,0,0.05);
-        }
-        .menu-icon{
-            font-size: 24px;
-            cursor: pointer;
-        }
-        .logo{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo img{
-            width: 25%;
-        }
-        .wallet button{
-            background-color: #0024ff;
-            color: white;
-            padding: 8px 12px;
-            width: 100%;
-            border: none;
-            border-radius: 5px;
-        }
-        .container{
-           padding: 20px;
-        }
-        .card{
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 5px rgb(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        .card h2{
-            margin-top: 0;
-        }
-        .card select{
-            width: 80%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius:6px;
-            border: 1px solid #ccc;
-            font-size: 16px
-        }
-        .card button{
-            margin-top: 10px;
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: none;
-            font-size: 16px;
-        }
-        button {
-            background-color: #0024ff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        ;
-        }
-        a {
-            color: white;
-            text-decoration: none;
-        }
-        button:hover {
-            background-color: #192258;
-        }
-
-        /* Sidebar styles */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 260px;
-            height: 100%;
-            background: #fff;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.08);
-            transform: translateX(-100%);
-            transition: transform 0.25s ease;
-            z-index: 3000;
-            padding: 20px 15px;
-            overflow-y: auto;
-        }
-        .sidebar.open {
-            transform: translateX(0);
-            z-index: 3000;
-        }
-        .sidebar .close-btn {
-            font-size: 20px;
-            cursor: pointer;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-        .sidebar nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .sidebar nav li {
-            margin: 12px 0;
-        }
-        .sidebar nav a {
-            color: #22356f;
-            text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            padding: 10px 8px;
-            border-radius: 8px;
-            transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
-        }
-        .sidebar nav a .icon {
-            width: 20px;
-            height: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #5563a7;
-            flex: 0 0 20px;
-            font-size: 18px;
-        }
-        .sidebar nav a:hover {
-            background: #f1f5ff;
-            color: #0024ff;
-            transform: translateX(3px);
-        }
-        .sidebar nav a.active {
-            background: linear-gradient(90deg,#e9eefc,#dfe8ff);
-            color: #0024ff;
-            box-shadow: inset 0 0 0 1px rgba(0,36,255,0.06);
-        }
-        .badge { background:#e9eefc; color:#0024ff; padding:2px 7px; border-radius:12px; font-size:12px; }
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.35);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease;
-            z-index: 2000;
-        }
-        .overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        .header {
-            position: relative;
-            z-index: 1100;
-        }
-        @media (min-width: 900px) {
-            .menu-icon { display: none; }
-            .sidebar {
-                transform: none;
-                position: sticky;
-                top: 0;
-                width: 240px;
-                height: 100vh;
-                box-shadow: none;
-                display: block;
-            }
-            .overlay { display: none; }
-            body { display: flex; }
-            .container { margin-left: 260px; max-width: calc(100% - 260px); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home page</title>
+<style>
+  body{
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+  }
+  .header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 10px 15px;
+      box-shadow: 0 2px 5px rgb(0,0,0,0.05);
+      position: relative; z-index: 1100;
+  }
+  .menu-icon{
+      font-size: 24px;
+      cursor: pointer;
+  }
+  .logo{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+  }
+  .logo img{
+      width: 20%;
+  }
+  .wallet button{
+      background-color: #0024ff;
+      color: white;
+      padding: 8px 12px;
+      width: 150px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+  }
+  .wallet button:hover {
+      background-color: #192258;
+  }
+  .container{
+     padding: 20px;
+  }
+  .card{
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 5px rgb(0,0,0,0.05);
+      margin-bottom: 20px;
+  }
+  .card h2{
+      margin-top: 0;
+  }
+  .payment-form label{
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+  }
+  .payment-form input, .payment-form select{
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+  }
+  .payment-form button{
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #0024ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+  }
+  .payment-form button:hover {
+      background-color: #192258;
+  }
+  /* Sidebar styles */
+  .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background: #fff;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 3000;
+      padding: 20px 15px;
+      overflow-y: auto;
+  }
+  .sidebar.open {
+      transform: translateX(0);
+      z-index: 3000;
+  }
+  .sidebar .close-btn {
+      font-size: 20px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      display: inline-block;
+  }
+  .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  }
+  .sidebar nav li {
+      margin: 12px 0;
+  }
+  .sidebar nav a {
+      color: #22356f;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 8px;
+      border-radius: 8px;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+  }
+  .sidebar nav a .icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #5563a7;
+      flex: 0 0 20px;
+      font-size: 18px;
+  }
+  .sidebar nav a:hover {
+      background: #f1f5ff;
+      color: #0024ff;
+      transform: translateX(3px);
+  }
+  .sidebar nav a.active {
+      background: linear-gradient(90deg,#e9eefc,#dfe8ff);
+      color: #0024ff;
+      box-shadow: inset 0 0 0 1px rgba(0,36,255,0.06);
+  }
+  .badge { background:#e9eefc; color:#0024ff; padding:2px 7px; border-radius:12px; font-size:12px; }
+  .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease;
+      z-index: 2000;
+  }
+  .overlay.show {
+      opacity: 1;
+      visibility: visible;
+  }
+</style>
 </head>
 <body>
-    <div class="header"> 
-        <div class="menu-icon" id="menuIcon" tabindex="0" aria-label="Open menu" aria-expanded="false">☰</div>
-        <div class="logo">
-            <img src="hero.png" alt="">
-        </div>
-        <div class="wallet">
-            <button>Wallet.Balance:</button>         
-        </div>
+
+<div class="header"> 
+    <div class="menu-icon" id="menuIcon" tabindex="0" aria-label="Open menu" aria-expanded="false">☰</div>
+    <div class="logo">
+        <img src="hero.png" alt="">
+    </div>
+    <div class="wallet">
+        <button id="walletBtn">Wallet.Balance: $0.00</button>         
+    </div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" aria-hidden="true">
+    <div class="close-btn" id="closeBtn" tabindex="0" aria-label="Close menu">✕</div>
+    <nav>
+        <ul>
+            <li><a href="#" class="nav-link active" aria-current="page"><span class="icon" aria-hidden="true">🏠</span><span class="label">Dashboard</span><span class="badge" aria-hidden="true"></span></a></li>
+            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📥</span><span class="label">Buy Number</span></a></li>
+            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">🇺🇸</span><span class="label">Buy USA Number</span></a></li>
+            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📦</span><span class="label">My Orders</span><span class="badge">0</span></a></li>
+            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">💳</span><span class="label">My Transactions</span><span class="badge">0</span></a></li>
+            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">❓</span><span class="label">Support</span></a></li>
+            <li>
+              <a href="#" class="nav-link" id="logoutBtn">
+                <span class="icon" aria-hidden="true">↩️</span>
+                <span class="label">Logout</span>
+              </a>
+            </li>
+        </ul>
+    </nav> 
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="container">
+    <div class="card">
+         <h2>Welcome</h2>
+         <p>At primeSmshub, verify more for less with ease</p>
     </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar" aria-hidden="true">
-        <div class="close-btn" id="closeBtn" tabindex="0" aria-label="Close menu">✕</div>
-        <nav>
-            <ul>
-                <li><a href="#" class="nav-link active" aria-current="page"><span class="icon" aria-hidden="true">🏠</span><span class="label">Dashboard</span><span class="badge" aria-hidden="true"></span></a></li>
-                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📥</span><span class="label">Buy Number</span></a></li>
-                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">🇺🇸</span><span class="label">Buy USA Number</span></a></li>
-                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📦</span><span class="label">My Orders</span><span class="badge">0</span></a></li>
-                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">💳</span><span class="label">My Transactions</span><span class="badge">0</span></a></li>
-                <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">❓</span><span class="label">Support</span></a></li>
+    <!-- PAYMENT FORM -->
+    <div class="card payment-form">
+        <h2>Make a Payment</h2>
 
-                <!-- 🔥 ONLY CHANGE HERE -->
-                <li>
-                  <a href="#" class="nav-link" id="logoutBtn">
-                    <span class="icon" aria-hidden="true">↩️</span>
-                    <span class="label">Logout</span>
-                  </a>
-                </li>
+        <label for="country">Select Country</label>
+        <select id="country">
+          <option value="NG" data-currency="NGN">Nigeria</option>
+          <option value="US" data-currency="USD">United States</option>
+          <option value="KE" data-currency="KES">Kenya</option>
+          <option value="GH" data-currency="GHS">Ghana</option>
+          <option value="UG" data-currency="UGX">Uganda</option>
+          <option value="TZ" data-currency="TZS">Tanzania</option>
+          <option value="ZA" data-currency="ZAR">South Africa</option>
+        </select>
 
-            </ul>
-        </nav> 
-    </aside>
+        <label for="amount">Enter Amount</label>
+        <input type="number" id="amount" placeholder="0.00" min="1" step="0.01" />
 
-    <div class="overlay" id="overlay"></div>
+        <label for="method">Payment Method</label>
+        <select id="method">
+            <option value="card">Card</option>
+            <option value="banktransfer">Bank Transfer</option>
+            <option value="mobilemoney">Mobile Money</option>
+        </select>
 
-    <div class="container">
-        <div class="card">
-             <h2>Welcome</h2>
-             <p>At primeSmshub, verify more for less with ease</p>
-        </div>
-        <div class="card">
-            <h2>Get a New number </h2>
-        </div>
-        <div class="card">
-            <label for="country">Select country</label><br>
-            
-              <select name="" id="">
-  <option value="">Choose a country</option>
-  <option value="afghanistan">Afghanistan</option>
-  <option value="albania">Albania</option>
-  <option value="algeria">Algeria</option>
-  <option value="andorra">Andorra</option>
-  <option value="angola">Angola</option>
-  <option value="antigua-and-barbuda">Antigua and Barbuda</option>
-  <option value="argentina">Argentina</option>
-  <option value="armenia">Armenia</option>
-  <option value="australia">Australia</option>
-  <option value="austria">Austria</option>
-  <option value="azerbaijan">Azerbaijan</option>
-  <option value="bahamas">Bahamas</option>
-  <option value="bahrain">Bahrain</option>
-  <option value="bangladesh">Bangladesh</option>
-  <option value="barbados">Barbados</option>
-  <option value="belarus">Belarus</option>
-  <option value="belgium">Belgium</option>
-  <option value="belize">Belize</option>
-  <option value="benin">Benin</option>
-  <option value="bhutan">Bhutan</option>
-  <option value="bolivia">Bolivia</option>
-  <option value="bosnia-and-herzegovina">Bosnia and Herzegovina</option>
-  <option value="botswana">Botswana</option>
-  <option value="brazil">Brazil</option>
-  <option value="brunei">Brunei</option>
-  <option value="bulgaria">Bulgaria</option>
-  <option value="burkina-faso">Burkina Faso</option>
-  <option value="burundi">Burundi</option>
-  <option value="cambodia">Cambodia</option>
-  <option value="cameroon">Cameroon</option>
-  <option value="canada">Canada</option>
-  <option value="cape-verde">Cape Verde</option>
-  <option value="central-african-republic">Central African Republic</option>
-  <option value="chad">Chad</option>
-  <option value="chile">Chile</option>
-  <option value="china">China</option>
-  <option value="colombia">Colombia</option>
-  <option value="comoros">Comoros</option>
-  <option value="congo">Congo</option>
-  <option value="costa-rica">Costa Rica</option>
-  <option value="croatia">Croatia</option>
-  <option value="cuba">Cuba</option>
-  <option value="cyprus">Cyprus</option>
-  <option value="czech-republic">Czech Republic</option>
-  <option value="denmark">Denmark</option>
-  <option value="djibouti">Djibouti</option>
-  <option value="dominica">Dominica</option>
-  <option value="dominican-republic">Dominican Republic</option>
-  <option value="ecuador">Ecuador</option>
-  <option value="egypt">Egypt</option>
-  <option value="el-salvador">El Salvador</option>
-  <option value="equatorial-guinea">Equatorial Guinea</option>
-  <option value="eritrea">Eritrea</option>
-  <option value="estonia">Estonia</option>
-  <option value="eswatini">Eswatini</option>
-  <option value="ethiopia">Ethiopia</option>
-  <option value="fiji">Fiji</option>
-  <option value="finland">Finland</option>
-  <option value="france">France</option>
-  <option value="gabon">Gabon</option>
-  <option value="gambia">Gambia</option>
-  <option value="georgia">Georgia</option>
-  <option value="germany">Germany</option>
-  <option value="ghana">Ghana</option>
-  <option value="greece">Greece</option>
-  <option value="grenada">Grenada</option>
-  <option value="guatemala">Guatemala</option>
-  <option value="guinea">Guinea</option>
-  <option value="guinea-bissau">Guinea-Bissau</option>
-  <option value="guyana">Guyana</option>
-  <option value="haiti">Haiti</option>
-  <option value="honduras">Honduras</option>
-  <option value="hungary">Hungary</option>
-  <option value="iceland">Iceland</option>
-  <option value="india">India</option>
-  <option value="indonesia">Indonesia</option>
-  <option value="iran">Iran</option>
-  <option value="iraq">Iraq</option>
-  <option value="ireland">Ireland</option>
-  <option value="israel">Israel</option>
-  <option value="italy">Italy</option>
-  <option value="jamaica">Jamaica</option>
-  <option value="japan">Japan</option>
-  <option value="jordan">Jordan</option>
-  <option value="kazakhstan">Kazakhstan</option>
-  <option value="kenya">Kenya</option>
-  <option value="kuwait">Kuwait</option>
-  <option value="kyrgyzstan">Kyrgyzstan</option>
-  <option value="laos">Laos</option>
-  <option value="latvia">Latvia</option>
-  <option value="lebanon">Lebanon</option>
-  <option value="lesotho">Lesotho</option>
-  <option value="liberia">Liberia</option>
-  <option value="libya">Libya</option>
-  <option value="liechtenstein">Liechtenstein</option>
-  <option value="lithuania">Lithuania</option>
-  <option value="luxembourg">Luxembourg</option>
-  <option value="madagascar">Madagascar</option>
-  <option value="malawi">Malawi</option>
-  <option value="malaysia">Malaysia</option>
-  <option value="maldives">Maldives</option>
-  <option value="mali">Mali</option>
-  <option value="malta">Malta</option>
-  <option value="marshall-islands">Marshall Islands</option>
-  <option value="mauritania">Mauritania</option>
-  <option value="mauritius">Mauritius</option>
-  <option value="mexico">Mexico</option>
-  <option value="micronesia">Micronesia</option>
-  <option value="moldova">Moldova</option>
-  <option value="monaco">Monaco</option>
-  <option value="mongolia">Mongolia</option>
-  <option value="montenegro">Montenegro</option>
-  <option value="morocco">Morocco</option>
-  <option value="mozambique">Mozambique</option>
-  <option value="myanmar">Myanmar</option>
-  <option value="namibia">Namibia</option>
-  <option value="nepal">Nepal</option>
-  <option value="netherlands">Netherlands</option>
-  <option value="new-zealand">New Zealand</option>
-  <option value="nicaragua">Nicaragua</option>
-  <option value="niger">Niger</option>
-  <option value="nigeria">Nigeria</option>
-  <option value="north-korea">North Korea</option>
-  <option value="north-macedonia">North Macedonia</option>
-  <option value="norway">Norway</option>
-  <option value="oman">Oman</option>
-  <option value="pakistan">Pakistan</option>
-  <option value="panama">Panama</option>
-  <option value="papua-new-guinea">Papua New Guinea</option>
-  <option value="paraguay">Paraguay</option>
-  <option value="peru">Peru</option>
-  <option value="philippines">Philippines</option>
-  <option value="poland">Poland</option>
-  <option value="portugal">Portugal</option>
-  <option value="qatar">Qatar</option>
-  <option value="romania">Romania</option>
-  <option value="russia">Russia</option>
-  <option value="rwanda">Rwanda</option>
-  <option value="saudi-arabia">Saudi Arabia</option>
-  <option value="senegal">Senegal</option>
-  <option value="serbia">Serbia</option>
-  <option value="seychelles">Seychelles</option>
-  <option value="sierra-leone">Sierra Leone</option>
-  <option value="singapore">Singapore</option>
-  <option value="slovakia">Slovakia</option>
-  <option value="slovenia">Slovenia</option>
-  <option value="somalia">Somalia</option>
-  <option value="south-africa">South Africa</option>
-  <option value="south-sudan">South Sudan</option>
-  <option value="spain">Spain</option>
-  <option value="sri-lanka">Sri Lanka</option>
-  <option value="sudan">Sudan</option>
-  <option value="suriname">Suriname</option>
-  <option value="sweden">Sweden</option>
-  <option value="switzerland">Switzerland</option>
-  <option value="syria">Syria</option>
-  <option value="taiwan">Taiwan</option>
-  <option value="tajikistan">Tajikistan</option>
-  <option value="tanzania">Tanzania</option>
-  <option value="thailand">Thailand</option>
-  <option value="togo">Togo</option>
-  <option value="trinidad-and-tobago">Trinidad and Tobago</option>
-  <option value="tunisia">Tunisia</option>
-  <option value="turkey">Turkey</option>
-  <option value="turkmenistan">Turkmenistan</option>
-  <option value="uganda">Uganda</option>
-  <option value="ukraine">Ukraine</option>
-  <option value="united-arab-emirates">United Arab Emirates</option>
-  <option value="united-kingdom">United Kingdom</option>
-  <option value="united-states">United States</option>
-  <option value="uruguay">Uruguay</option>
-  <option value="uzbekistan">Uzbekistan</option>
-  <option value="venezuela">Venezuela</option>
-  <option value="vietnam">Vietnam</option>
-  <option value="yemen">Yemen</option>
-  <option value="zambia">Zambia</option>
-  <option value="zimbabwe">Zimbabwe</option>
-            </select><br><br>
-            <button><a href="">Continue</a></button>
-        </div>
+        <button id="payBtn">Pay Now</button>
     </div>
+</div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var menuIcon = document.getElementById('menuIcon');
-      var sidebar = document.getElementById('sidebar');
-      var closeBtn = document.getElementById('closeBtn');
-      var overlay = document.getElementById('overlay');
-      var navLinks = document.querySelectorAll('.sidebar .nav-link');
+<!-- FLUTTERWAVE -->
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script>
+document.getElementById('payBtn').addEventListener('click', async () => {
+  const countryEl = document.getElementById('country');
+  const amountEl = document.getElementById('amount');
+  const methodEl = document.getElementById('method');
 
-      function openSidebar() {
-        sidebar.classList.add('open');
-        overlay.classList.add('show');
-        sidebar.setAttribute('aria-hidden', 'false');
-        menuIcon.setAttribute('aria-expanded', 'true');
-      }
-      function closeSidebar() {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
-        sidebar.setAttribute('aria-hidden', 'true');
-        menuIcon.setAttribute('aria-expanded', 'false');
-        menuIcon.focus();
-      }
+  const country = countryEl.value;
+  const currency = countryEl.selectedOptions[0].dataset.currency;
+  const amount = parseFloat(amountEl.value);
+  const payment_method = methodEl.value;
 
-      menuIcon.addEventListener('click', openSidebar);
-      closeBtn.addEventListener('click', closeSidebar);
-      overlay.addEventListener('click', closeSidebar);
-    });
-    </script>
+  if (!amount || amount <= 0) { alert("Please enter a valid amount"); return; }
 
-    <!-- 🔥 FIREBASE LOGOUT ONLY -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-      import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  FlutterwaveCheckout({
+    public_key: "FLWPUBK_TEST-5a42c6dbc9d723c053a6086ce5225765-X",
+    tx_ref: "tx_" + Math.floor(Math.random() * 1000000),
+    amount: amount,
+    currency: currency,
+    payment_options: payment_method,
+    customer: { email: "customer@example.com", phone_number: "08012345678", name: "John Doe" },
+    callback: function (data) {
+      fetch(`/flutterwave/verify/${data.transaction_id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === "success") {
+            alert(`Payment Verified ✅\nAmount: ${resp.data.amount} ${resp.data.currency}`);
+            fetch(`/notify-telegram`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                transaction_id: resp.data.id,
+                amount: resp.data.amount,
+                currency: resp.data.currency,
+                customer: resp.data.customer
+              })
+            });
+          } else {
+            alert("Verification Failed ❌");
+          }
+        })
+        .catch(err => { console.error(err); alert("Server Error ❌"); });
+    },
+    onclose: function () { console.log("Payment modal closed"); }
+  });
+});
+</script>
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyCIK3C5qAOUZUtUixX1knFRSkXAYXOCDaA",
-        authDomain: "primesmshub-c0f58.firebaseapp.com",
-        projectId: "primesmshub-c0f58",
-        storageBucket: "primesmshub-c0f58.firebasestorage.app",
-        messagingSenderId: "40273399506",
-        appId: "1:40273399506:web:349a116c082d830987a70b"
-      };
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var menuIcon = document.getElementById('menuIcon');
+  var sidebar = document.getElementById('sidebar');
+  var closeBtn = document.getElementById('closeBtn');
+  var overlay = document.getElementById('overlay');
 
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    sidebar.setAttribute('aria-hidden', 'false');
+    menuIcon.setAttribute('aria-expanded', 'true');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    sidebar.setAttribute('aria-hidden', 'true');
+    menuIcon.setAttribute('aria-expanded', 'false');
+    menuIcon.focus();
+  }
 
-      document.getElementById("logoutBtn").addEventListener("click", (e) => {
-        e.preventDefault();
-        signOut(auth).then(() => {
-          window.location.href = "login.html";
-        });
-      });
-    </script>
+  menuIcon.addEventListener('click', openSidebar);
+  closeBtn.addEventListener('click', closeSidebar);
+  overlay.addEventListener('click', closeSidebar);
+});
+</script>
+
+<!-- Firebase Logout -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCIK3C5qAOUZUtUixX1knFRSkXAYXOCDaA",
+  authDomain: "primesmshub-c0f58.firebaseapp.com",
+  projectId: "primesmshub-c0f58",
+  storageBucket: "primesmshub-c0f58.firebasestorage.app",
+  messagingSenderId: "40273399506",
+  appId: "1:40273399506:web:349a116c082d830987a70b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+document.getElementById("logoutBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  signOut(auth).then(() => { window.location.href = "login.html"; });
+});
+</script>
 
 </body>
 </html>

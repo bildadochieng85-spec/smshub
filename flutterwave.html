@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Global Flutterwave Payment</title>
+  <script src="https://checkout.flutterwave.com/v3.js"></script>
+  <style>
+    body { font-family: Arial; display:flex; justify-content:center; align-items:center; height:100vh; background:#f4f6f9; }
+    .pay-box { background:white; padding:30px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); text-align:center; width:360px; }
+    button { width:100%; padding:14px; font-size:16px; border:none; border-radius:6px; background:#0a74da; color:white; cursor:pointer; }
+    button:hover { background:#095bb5; }
+  </style>
+</head>
+<body>
+<div class="pay-box">
+  <h2>Make a Payment</h2>
+  <p id="region-label">Detecting location...</p>
+  <button onclick="startPayment()">Pay Now</button>
+</div>
+<script>
+let userCountry="UNKNOWN", payConfig={currency:"USD",amount:50,payment_options:"card,banktransfer"}
+async function detectCountry(){try{const res=await fetch("https://ipapi.co/json/"),data=await res.json();userCountry=data.country_code||"US"}catch(e){console.warn(e)}document.getElementById("region-label").innerText="Detected: "+userCountry;configurePayment()}
+function configurePayment(){const a={KE:"KES",NG:"NGN",GH:"GHS",UG:"UGX",RW:"RWF",ZM:"ZMW",ZA:"ZAR",SN:"XOF",TZ:"TZS",ML:"XOF",GW:"XOF"};userCountry==="US"?(payConfig.currency="USD",payConfig.payment_options="card,banktransfer"):a[userCountry]?(payConfig.currency=a[userCountry],payConfig.payment_options="card,banktransfer,mobilemoney,ussd"):(payConfig.currency="USD",payConfig.payment_options="card,banktransfer")}
+function startPayment(){const txRef="TX-"+Date.now();FlutterwaveCheckout({public_key:"FLWPUBK_TEST-5a42c6dbc9d723c053a6086ce5225765-X",tx_ref:txRef,amount:payConfig.amount,currency:payConfig.currency,payment_options:payConfig.payment_options,customer:{email:"customer@example.com",phone_number:"0000000000",name:"Web User"},callback:function(data){data.status==="successful"?window.location.href=`/callback.html?status=successful&transaction_id=${data.transaction_id}`:document.getElementById("region-label").innerHTML="<span style='color:red'>Payment failed ❌</span>"},customizations:{title:"PrimeSmsHub Payment",description:"Pay for services",logo:"https://yourdomain.com/logo.png"}})}
+detectCountry()
+</script>
+</body>
+</html>
