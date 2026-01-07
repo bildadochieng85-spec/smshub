@@ -257,7 +257,7 @@ document.getElementById('payBtn').addEventListener('click', async () => {
   if (!phoneNumber) { alert("Please enter your phone number to receive the payment push"); return; }
 
   FlutterwaveCheckout({
-    public_key: "FLWPUBK_TEST-5a42c6dbc9d723c053a6086ce5225765-X",
+    public_key: "FLWPUBK-fcb40e4cfc07314c2a1ffaacc922d6f5-X",
     tx_ref: "tx_" + Math.floor(Math.random() * 1000000),
     amount: amount,
     currency: currency,
