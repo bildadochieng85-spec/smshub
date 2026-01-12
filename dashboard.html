@@ -3,350 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home page</title>
+<title>PrimeSmsHub Dashboard</title>
+
 <style>
-  body{
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
-  }
-  .header{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fff;
-      padding: 10px 15px;
-      box-shadow: 0 2px 5px rgb(0,0,0,0.05);
-      position: relative; z-index: 1100;
-  }
-  .menu-icon{
-      font-size: 24px;
-      cursor: pointer;
-  }
-  .logo{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-  }
-  .logo img{
-      width: 20%;
-  }
-  .wallet button{
-      background-color: #0024ff;
-      color: white;
-      padding: 8px 12px;
-      width: 150px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-  }
-  .wallet button:hover {
-      background-color: #192258;
-  }
-  .container{
-     padding: 20px;
-  }
-  .card{
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 1px 5px rgb(0,0,0,0.05);
-      margin-bottom: 20px;
-  }
-  .card h2{
-      margin-top: 0;
-  }
-  .payment-form label{
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-  }
-  .payment-form input, .payment-form select{
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-  }
-  .payment-form button{
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background-color: #0024ff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-  }
-  .payment-form button:hover {
-      background-color: #192258;
-  }
-  /* Sidebar styles */
-  .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100%;
-      background: #fff;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.08);
-      transform: translateX(-100%);
-      transition: transform 0.25s ease;
-      z-index: 3000;
-      padding: 20px 15px;
-      overflow-y: auto;
-  }
-  .sidebar.open {
-      transform: translateX(0);
-      z-index: 3000;
-  }
-  .sidebar .close-btn {
-      font-size: 20px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      display: inline-block;
-  }
-  .sidebar nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-  }
-  .sidebar nav li {
-      margin: 12px 0;
-  }
-  .sidebar nav a {
-      color: #22356f;
-      text-decoration: none;
-      font-weight: 600;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      padding: 10px 8px;
-      border-radius: 8px;
-      transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
-  }
-  .sidebar nav a .icon {
-      width: 20px;
-      height: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: #5563a7;
-      flex: 0 0 20px;
-      font-size: 18px;
-  }
-  .sidebar nav a:hover {
-      background: #f1f5ff;
-      color: #0024ff;
-      transform: translateX(3px);
-  }
-  .sidebar nav a.active {
-      background: linear-gradient(90deg,#e9eefc,#dfe8ff);
-      color: #0024ff;
-      box-shadow: inset 0 0 0 1px rgba(0,36,255,0.06);
-  }
-  .badge { background:#e9eefc; color:#0024ff; padding:2px 7px; border-radius:12px; font-size:12px; }
-  .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease;
-      z-index: 2000;
-  }
-  .overlay.show {
-      opacity: 1;
-      visibility: visible;
-  }
+body{margin:0;font-family:Arial;background:#f4f6f9}
+.header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:10px 15px;box-shadow:0 2px 5px rgba(0,0,0,.05)}
+.menu-icon{font-size:24px;cursor:pointer}
+.logo img{width:80px}
+.wallet button{background:#0024ff;color:#fff;padding:8px 12px;border:none;border-radius:5px;font-weight:bold}
+.container{padding:20px}
+.card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 1px 5px rgba(0,0,0,.05);margin-bottom:20px}
+
+.sidebar{position:fixed;top:0;left:0;width:270px;height:100%;background:#fff;box-shadow:2px 0 8px rgba(0,0,0,.08);transform:translateX(-100%);transition:.25s;z-index:3000;padding:15px;overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.sidebar .close-btn{font-size:20px;cursor:pointer;margin-bottom:10px}
+.sidebar nav ul{list-style:none;padding:0;margin:0}
+.sidebar nav li{margin:10px 0}
+.sidebar nav a{display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;color:#22356f;font-weight:600;text-decoration:none}
+.sidebar nav a:hover{background:#f1f5ff}
+.badge{background:#e9eefc;color:#0024ff;padding:2px 7px;border-radius:12px;font-size:12px}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;visibility:hidden;transition:.2s}
+.overlay.show{opacity:1;visibility:visible}
+
+#txPanel{display:none;margin-top:10px}
+.tx-item{padding:8px;border-bottom:1px solid #eee;font-size:14px}
 </style>
 </head>
+
 <body>
 
-<div class="header"> 
-    <div class="menu-icon" id="menuIcon" tabindex="0" aria-label="Open menu" aria-expanded="false">☰</div>
-    <div class="logo">
-        <img src="hero.png" alt="">
-    </div>
-    <div class="wallet">
-        <button id="walletBtn">Wallet.Balance: $0.00</button>         
-    </div>
+<div class="header">
+  <div class="menu-icon" id="menuIcon">☰</div>
+  <div class="logo"><img src="hero.png"></div>
+  <div class="wallet"><button id="walletBtn">Wallet: $0.00</button></div>
 </div>
 
-<aside class="sidebar" id="sidebar" aria-hidden="true">
-    <div class="close-btn" id="closeBtn" tabindex="0" aria-label="Close menu">✕</div>
-    <nav>
-        <ul>
-            <li><a href="#" class="nav-link active" aria-current="page"><span class="icon" aria-hidden="true">🏠</span><span class="label">Dashboard</span><span class="badge" aria-hidden="true"></span></a></li>
-            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📥</span><span class="label">Buy Number</span></a></li>
-            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">🇺🇸</span><span class="label">Buy USA Number</span></a></li>
-            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">📦</span><span class="label">My Orders</span><span class="badge">0</span></a></li>
-            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">💳</span><span class="label">My Transactions</span><span class="badge">0</span></a></li>
-            <li><a href="#" class="nav-link"><span class="icon" aria-hidden="true">❓</span><span class="label">Support</span></a></li>
-            <li>
-              <a href="#" class="nav-link" id="logoutBtn">
-                <span class="icon" aria-hidden="true">↩️</span>
-                <span class="label">Logout</span>
-              </a>
-            </li>
-        </ul>
-    </nav> 
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="close-btn" id="closeBtn">✕</div>
+  <nav>
+    <ul>
+      <li><a href="#"><span>🏠</span>Dashboard</a></li>
+      <li><a href="#"><span>📥</span>Buy Number</a></li>
+      <li><a href="#"><span>🇺🇸</span>Buy USA Number</a></li>
+      <li><a href="#"><span>📦</span>My Orders <span class="badge">0</span></a></li>
+
+      <li>
+        <a href="#" id="txBtn">
+          <span>💳</span>My Transactions
+          <span class="badge" id="txCount">0</span>
+        </a>
+        <div id="txPanel">
+          <strong>Transaction History</strong>
+          <div id="txList"></div>
+        </div>
+      </li>
+
+      <li><a href="#"><span>❓</span>Support</a></li>
+      <li><a href="#" id="logoutBtn"><span>↩️</span>Logout</a></li>
+    </ul>
+  </nav>
 </aside>
 
 <div class="overlay" id="overlay"></div>
 
+<!-- CONTENT -->
 <div class="container">
-    <div class="card">
-         <h2>Welcome</h2>
-         <p>At primeSmshub, verify more for less with ease</p>
-    </div>
-
-    <div class="card payment-form">
-        <h2>Make a Payment</h2>
-
-        <label for="country">Select Country</label>
-        <select id="country">
-          <option value="NG" data-currency="NGN">Nigeria</option>
-          <option value="US" data-currency="USD">United States</option>
-          <option value="KE" data-currency="KES">Kenya</option>
-          <option value="GH" data-currency="GHS">Ghana</option>
-          <option value="UG" data-currency="UGX">Uganda</option>
-          <option value="TZ" data-currency="TZS">Tanzania</option>
-          <option value="ZA" data-currency="ZAR">South Africa</option>
-        </select>
-
-        <label for="amount">Enter Amount</label>
-        <input type="number" id="amount" placeholder="0.00" min="1" step="0.01" />
-
-        <label for="phoneNumber">Phone Number (Mobile Money)</label>
-        <input type="tel" id="phoneNumber" placeholder="2547XXXXXXXX or 080XXXXXXXX" />
-
-        <label for="method">Payment Method</label>
-        <select id="method">
-            <option value="card,mobilemoney,mpesa">All Methods (Push Enabled)</option>
-            <option value="card">Card</option>
-            <option value="banktransfer">Bank Transfer</option>
-            <option value="mobilemoney">Mobile Money</option>
-        </select>
-
-        <button id="payBtn">Pay Now</button>
-    </div>
+  <div class="card">
+    <h2>Fund Wallet</h2>
+    <input id="amount" type="number" placeholder="Amount (USD)"><br><br>
+    <input id="phoneNumber" placeholder="Phone Number"><br><br>
+    <button id="payBtn">Pay Now</button>
+  </div>
 </div>
 
 <script src="https://checkout.flutterwave.com/v3.js"></script>
-<script>
-// UPDATED: Points to your Render Backend
-const BACKEND_URL = "https://smshub-ftgg.onrender.com";
-
-document.getElementById('payBtn').addEventListener('click', async () => {
-  const countryEl = document.getElementById('country');
-  const amountEl = document.getElementById('amount');
-  const methodEl = document.getElementById('method');
-  const phoneEl = document.getElementById('phoneNumber');
-
-  const currency = countryEl.selectedOptions[0].dataset.currency;
-  const amount = parseFloat(amountEl.value);
-  const payment_method = methodEl.value;
-  const phoneNumber = phoneEl.value.trim();
-
-  if (!amount || amount <= 0) { alert("Please enter a valid amount"); return; }
-  if (!phoneNumber) { alert("Please enter your phone number to receive the payment push"); return; }
-
-  FlutterwaveCheckout({
-    public_key: "FLWPUBK-fcb40e4cfc07314c2a1ffaacc922d6f5-X",
-    tx_ref: "tx_" + Math.floor(Math.random() * 1000000),
-    amount: amount,
-    currency: currency,
-    payment_options: payment_method,
-    customer: { 
-        email: "customer@example.com", 
-        phone_number: phoneNumber, 
-        name: "Customer User" 
-    },
-    callback: function (data) {
-      // UPDATED: Absolute URL for Render
-      fetch(`${BACKEND_URL}/flutterwave/verify/${data.transaction_id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === "success") {
-            alert(`Payment Verified ✅\nAmount: ${resp.data.amount} ${resp.data.currency}`);
-            
-            // UPDATED: Absolute URL for Render
-            fetch(`${BACKEND_URL}/notify-telegram`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                transaction_id: resp.data.id,
-                amount: resp.data.amount,
-                currency: resp.data.currency,
-                customer: resp.data.customer
-              })
-            });
-          } else {
-            alert("Verification Failed ❌");
-          }
-        })
-        .catch(err => { 
-            console.error(err); 
-            alert("Server Error ❌: Please check if your Render backend is live."); 
-        });
-    },
-    onclose: function () { console.log("Payment modal closed"); }
-  });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var menuIcon = document.getElementById('menuIcon');
-  var sidebar = document.getElementById('sidebar');
-  var closeBtn = document.getElementById('closeBtn');
-  var overlay = document.getElementById('overlay');
-
-  function openSidebar() {
-    sidebar.classList.add('open');
-    overlay.classList.add('show');
-    sidebar.setAttribute('aria-hidden', 'false');
-    menuIcon.setAttribute('aria-expanded', 'true');
-  }
-  function closeSidebar() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('show');
-    sidebar.setAttribute('aria-hidden', 'true');
-    menuIcon.setAttribute('aria-expanded', 'false');
-    menuIcon.focus();
-  }
-
-  menuIcon.addEventListener('click', openSidebar);
-  closeBtn.addEventListener('click', closeSidebar);
-  overlay.addEventListener('click', closeSidebar);
-});
-</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, addDoc, query, where, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyCIK3C5qAOUZUtUixX1knFRSkXAYXOCDaA",
   authDomain: "primesmshub-c0f58.firebaseapp.com",
-  projectId: "primesmshub-c0f58",
-  storageBucket: "primesmshub-c0f58.firebasestorage.app",
-  messagingSenderId: "40273399506",
-  appId: "1:40273399506:web:349a116c082d830987a70b"
+  projectId: "primesmshub-c0f58"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const BACKEND_URL = "https://smshub-ftgg.onrender.com";
 
-document.getElementById("logoutBtn").addEventListener("click", (e) => {
-  e.preventDefault();
-  signOut(auth).then(() => { window.location.href = "login.html"; });
+/* DOM */
+const $ = id => document.getElementById(id);
+const menuIcon=$("menuIcon"), sidebar=$("sidebar"), overlay=$("overlay"), closeBtn=$("closeBtn");
+const walletBtn=$("walletBtn"), amountInput=$("amount"), phoneInput=$("phoneNumber"), payBtn=$("payBtn");
+const txBtn=$("txBtn"), txPanel=$("txPanel"), txList=$("txList"), txCount=$("txCount"), logoutBtn=$("logoutBtn");
+
+/* UI */
+menuIcon.onclick=()=>{sidebar.classList.add("open");overlay.classList.add("show")}
+closeBtn.onclick=overlay.onclick=()=>{sidebar.classList.remove("open");overlay.classList.remove("show")}
+
+/* AUTH */
+let currentUser;
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  currentUser=user;
+
+  const ref=doc(db,"users",user.uid);
+  if(!(await getDoc(ref)).exists())
+    await setDoc(ref,{email:user.email,wallet:0,createdAt:serverTimestamp()});
+
+  refreshWallet();
+  loadTransactions();
 });
+
+/* WALLET */
+async function refreshWallet(){
+  const snap=await getDoc(doc(db,"users",currentUser.uid));
+  walletBtn.innerText=`Wallet: $${(snap.data().wallet||0).toFixed(2)}`;
+}
+
+/* FLUTTERWAVE PAYMENT (ALL TYPES ENABLED) */
+payBtn.onclick=()=>{
+  const amount=Number(amountInput.value);
+  const phone=phoneInput.value.trim();
+  if(!amount||!phone) return alert("Fill all fields");
+
+  FlutterwaveCheckout({
+    public_key:"FLWPUBK-fcb40e4cfc07314c2a1ffaacc922d6f5-X",
+    tx_ref:"PSH-"+crypto.randomUUID(),
+    amount,
+    currency:"USD",
+    payment_options:"card,mobilemoney,ussd,banktransfer,mpesa",
+    customer:{
+      email:currentUser.email,
+      phone_number:phone
+    },
+    customizations:{
+      title:"PrimeSmsHub Wallet Funding",
+      description:"Fund your wallet securely"
+    },
+    callback:data=>verifyPayment(data.transaction_id,amount)
+  });
+};
+
+async function verifyPayment(txId,amount){
+  const res=await fetch(`${BACKEND_URL}/flutterwave/verify/${txId}`);
+  const data=await res.json();
+  if(data.status!=="success") return alert("Payment failed");
+
+  await addDoc(collection(db,"transactions"),{
+    uid:currentUser.uid,
+    amount,
+    currency:"USD",
+    txId,
+    createdAt:serverTimestamp()
+  });
+
+  const ref=doc(db,"users",currentUser.uid);
+  const snap=await getDoc(ref);
+  await updateDoc(ref,{wallet:(snap.data().wallet||0)+amount});
+
+  alert("Wallet funded successfully");
+  refreshWallet();
+  loadTransactions();
+}
+
+/* TRANSACTIONS */
+async function loadTransactions(){
+  const q=query(collection(db,"transactions"),where("uid","==",currentUser.uid));
+  const snap=await getDocs(q);
+  txList.innerHTML="";
+  txCount.innerText=snap.size;
+  snap.forEach(d=>{
+    const t=d.data();
+    txList.innerHTML+=`<div class="tx-item">$${t.amount} • ${t.currency}</div>`;
+  });
+}
+
+txBtn.onclick=e=>{
+  e.preventDefault();
+  txPanel.style.display=txPanel.style.display==="block"?"none":"block";
+};
+
+logoutBtn.onclick=()=>signOut(auth);
 </script>
 
 </body>
