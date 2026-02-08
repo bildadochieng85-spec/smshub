@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Transactions - PrimeSmsHub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f8f9fa;color:#333}
+.header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:15px 20px;box-shadow:0 2px 8px rgba(0,0,0,.1);position:sticky;top:0;z-index:100}
+.header .logo img{width:120px}
+.header-right{display:flex;align-items:center;gap:15px}
+.menu-icon{font-size:24px;cursor:pointer;display:none}
+.wallet-btn{background:#0024ff;color:#fff;padding:10px 15px;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px}
+.wallet-btn:hover{background:#0020cc}
+
+.sidebar{position:fixed;top:0;left:0;width:280px;height:100vh;background:#fff;box-shadow:2px 0 10px rgba(0,0,0,.08);transform:translateX(-100%);transition:.3s;z-index:2000;overflow-y:auto;padding-top:10px}
+.sidebar.open{transform:translateX(0)}
+.sidebar .close-btn{display:none;font-size:24px;cursor:pointer;padding:10px 20px;color:#333}
+.sidebar .close-btn.show{display:block}
+.sidebar nav ul{list-style:none}
+.sidebar nav li{margin:5px 0}
+.sidebar nav a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#333;text-decoration:none;transition:.2s;font-weight:500}
+.sidebar nav a:hover,.sidebar nav a.active{background:#f0f4ff;color:#0024ff;border-left:3px solid #0024ff;padding-left:17px}
+.sidebar .badge{background:#e9eefc;color:#0024ff;padding:2px 8px;border-radius:12px;font-size:12px;margin-left:auto}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;transition:.2s;z-index:1500}
+.overlay.show{opacity:1;visibility:visible}
+
+.container{padding:20px;margin-left:0;transition:.3s}
+.container.sidebar-open{margin-left:280px}
+
+.hero{background:linear-gradient(135deg,#0024ff 0%,#0047cc 100%);color:#fff;padding:40px 20px;border-radius:8px;margin-bottom:30px;text-align:center}
+.hero h1{font-size:28px;margin-bottom:10px;font-weight:700}
+.hero p{font-size:16px;opacity:.95}
+
+.card{background:#fff;padding:25px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:20px}
+.card h3{color:#0024ff;margin-bottom:15px;font-weight:600}
+.tx-list{max-height:500px;overflow-y:auto}
+.tx-item{display:flex;justify-content:space-between;align-items:center;padding:15px;border-bottom:1px solid #eee;font-size:14px}
+.tx-item:last-child{border-bottom:none}
+.tx-item .amount{font-weight:600;color:#0024ff}
+.tx-item .date{color:#999;font-size:13px}
+
+@media(max-width:768px){
+  .container{padding:15px}
+  .menu-icon{display:block}
+  .hero h1{font-size:24px}
+}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+::-webkit-scrollbar-thumb{background:#0024ff;border-radius:10px}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="menu-icon" id="menuIcon">☰</div>
+  <div class="logo"><img src="hero.png" alt="PrimeSmsHub"></div>
+  <div class="header-right">
+    <button class="wallet-btn" id="walletBtn">Wallet: $0.00</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="close-btn" id="closeBtn">✕</div>
+  <nav>
+    <ul>
+      <li><a href="dashboard.html"><span>🏠</span>Dashboard</a></li>
+      <li><a href="buy-numbers.html"><span>📱</span>Buy Numbers</a></li>
+      <li><a href="usa-numbers.html"><span>🇺🇸</span>USA Numbers</a></li>
+      <li><a href="my-orders.html"><span>📦</span>My Orders</a></li>
+      <li><a href="transactions.html" class="active"><span>💳</span>My Transactions</a></li>
+      <li><a href="support.html"><span>❓</span>Support</a></li>
+      <li><a href="#" id="logoutBtn"><span>🚪</span>Logout</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- MAIN CONTENT -->
+<div class="container" id="container">
+  <div class="hero">
+    <h1>💳 Transaction History</h1>
+    <p>View all your wallet funding transactions</p>
+  </div>
+
+  <div class="card">
+    <h3>📊 Recent Transactions</h3>
+    <div class="tx-list" id="txList">
+      <div style="text-align:center;padding:30px;color:#999">No transactions yet</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCIK3C5qAOUZUtUixX1knFRSkXAYXOCDaA",
+  authDomain: "primesmshub-c0f58.firebaseapp.com",
+  projectId: "primesmshub-c0f58"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+const menuIcon=$("menuIcon"), sidebar=$("sidebar"), overlay=$("overlay"), closeBtn=$("closeBtn");
+const walletBtn=$("walletBtn"), txList=$("txList"), logoutBtn=$("logoutBtn");
+
+menuIcon.onclick=()=>{
+  sidebar.classList.add("open");
+  overlay.classList.add("show");
+  closeBtn.classList.add("show");
+};
+
+closeBtn.onclick=overlay.onclick=()=>{
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
+  closeBtn.classList.remove("show");
+};
+
+sidebar.querySelectorAll("a").forEach(link=>{
+  link.onclick=()=>{
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+    closeBtn.classList.remove("show");
+  };
+});
+
+async function loadTransactions(uid){
+  const q=query(collection(db,"transactions"),where("uid","==",uid));
+  const snap=await getDocs(q);
+  txList.innerHTML="";
+  
+  if(snap.size===0){
+    txList.innerHTML=`<div style="text-align:center;padding:30px;color:#999">No transactions yet</div>`;
+    return;
+  }
+  
+  snap.forEach(d=>{
+    const t=d.data();
+    const date=new Date(t.createdAt?.toDate()).toLocaleDateString();
+    txList.innerHTML+=`
+      <div class="tx-item">
+        <div>
+          <div style="font-weight:600">Payment Received</div>
+          <div class="date">${date}</div>
+        </div>
+        <div class="amount">+${t.amount} ${t.currency}</div>
+      </div>
+    `;
+  });
+}
+
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  const snap=await getDoc(doc(db,"users",user.uid));
+  walletBtn.innerText=`Wallet: $${(snap.data().wallet||0).toFixed(2)}`;
+  loadTransactions(user.uid);
+});
+
+logoutBtn.onclick=()=>signOut(auth);
+</script>
+
+</body>
+</html>

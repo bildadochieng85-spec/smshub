@@ -10,9 +10,9 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, { cors: { origin: '*' } })
 
-/* ================= FLUTTERWAVE CONFIG ================= */
-const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY
-const FLW_ENCRYPTION_KEY = process.env.FLW_ENCRYPTION_KEY
+/* ================= PAYSTACK CONFIG ================= */
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
+const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY
 
 /* ================= REDIS ================= */
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -99,15 +99,15 @@ app.get('/api/wallet', async (req, res) => {
   } catch { res.json({ balance: 0 }) }
 })
 
-/* ================= FLUTTERWAVE VERIFY (FIXED) ================= */
-app.get('/flutterwave/verify/:id', async (req, res) => {
+/* ================= PAYSTACK VERIFY (FIXED) ================= */
+app.get('/paystack/verify/:id', async (req, res) => {
   try {
     const txId = req.params.id
     if (!txId) return res.status(400).json({ status: 'error', message: 'Transaction ID is required' })
 
-    const response = await axios.get(`https://api.flutterwave.com/v3/transactions/${txId}/verify`, {
+    const response = await axios.get(`https://api.paystack.co/transaction/verify/${txId}`, {
       headers: {
-        Authorization: `Bearer ${FLW_SECRET_KEY}`,
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json'
       }
     })
@@ -168,8 +168,13 @@ app.post('/notify-telegram', async (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     server: 'ok',
-    flutterwave_secret_loaded: !!FLW_SECRET_KEY
+    paystack_secret_loaded: !!PAYSTACK_SECRET_KEY
   })
+})
+
+/* ================= PAYSTACK PUBLIC KEY ================= */
+app.get('/paystack-public-key', (req, res) => {
+  res.json({ publicKey: PAYSTACK_PUBLIC_KEY })
 })
 
 /* ================= START SERVER ================= */
