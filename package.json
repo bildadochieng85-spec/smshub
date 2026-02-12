@@ -1,18 +1,12 @@
 {
   "name": "smshub-prime",
-  "version": "1.0.0",
-  "description": "Prime SMS Hub - Virtual phone numbers, SMS receiving, wallet payments, and real-time support chat",
+  "version": "2.0.0",
+  "description": "Prime SMS Hub - Backend Server for Render Deployment. Virtual phone numbers, SMS receiving, wallet payments, and real-time support chat.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:stop": "pm2 stop ecosystem.config.js",
-    "pm2:restart": "pm2 restart ecosystem.config.js",
-    "pm2:save": "pm2 save",
-    "pm2:startup": "pm2 startup",
-    "set:server-url": "node scripts/set-server-url.js",
-    "vercel:build": "npm run set:server-url"
+    "test": "echo \"No tests configured\""
   },
   "author": "Prime SMS Hub",
   "license": "MIT",

@@ -1,0 +1,71 @@
+{
+  "name": "primesmshub",
+  "displayName": "Prime SMS Hub",
+  "description": "VS Code extension for PrimeSMSHub - Send SMS, check balance, view message logs directly from VS Code",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "author": "Prime SMS Hub",
+  "license": "MIT",
+  "icon": "resources/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/primesmshub.git"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onView:primesmshub-sidebar"
+  ],
+  "contributes": {
+    "views": {
+      "activitybar": [
+        {
+          "id": "primesmshub-sidebar",
+          "name": "Prime SMS Hub",
+          "icon": "resources/icon.svg",
+          "contextualTitle": "Prime SMS Hub Dashboard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Prime SMS Hub",
+      "properties": {
+        "primesmshub.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for Prime SMS Hub backend (required for functionality)",
+          "scope": "window"
+        },
+        "primesmshub.serverUrl": {
+          "type": "string",
+          "default": "https://your-app-name.onrender.com/api",
+          "description": "Base URL for Prime SMS Hub API (e.g., https://smshub-prime.onrender.com/api)",
+          "scope": "window"
+        },
+        "primesmshub.logRequests": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable logging of API requests and responses",
+          "scope": "window"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "primesmshub.refreshBalance",
+        "title": "Prime SMS Hub: Refresh Balance"
+      },
+      {
+        "command": "primesmshub.openSettings",
+        "title": "Prime SMS Hub: Open Settings"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0"
+  },
+  "scripts": {
+    "test": "echo \"No tests configured\""
+  }
+}

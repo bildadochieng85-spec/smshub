@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prime SMS Hub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 0;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .status-badge {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-left: auto;
+    }
+
+    .status-badge.connected {
+      background-color: #4ec9b0;
+    }
+
+    .status-badge.disconnected {
+      background-color: #ce9178;
+    }
+
+    .status-badge.loading {
+      background-color: #d4a57a;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .section {
+      margin-bottom: 24px;
+      padding: 12px;
+      background-color: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      border: 1px solid var(--vscode-panel-border);
+    }
+
+    .section-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--vscode-editor-foreground);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--vscode-input-border);
+      background-color: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--vscode-focusBorder);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .button-group.full {
+      grid-template-columns: 1fr;
+    }
+
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-family: inherit;
+      position: relative;
+    }
+
+    .btn-primary {
+      background-color: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--vscode-button-hoverBackground);
+    }
+
+    .btn-secondary {
+      background-color: var(--vscode-button-secondaryBackground);
+      color: var(--vscode-button-secondaryForeground);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.loading {
+      position: relative;
+    }
+
+    button.loading::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .message {
+      padding: 10px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .message.success {
+      background-color: rgba(76, 201, 176, 0.1);
+      color: #4ec9b0;
+      border: 1px solid rgba(76, 201, 176, 0.3);
+    }
+
+    .message.error {
+      background-color: rgba(206, 145, 120, 0.1);
+      color: #ce9178;
+      border: 1px solid rgba(206, 145, 120, 0.3);
+    }
+
+    .message.info {
+      background-color: rgba(100, 150, 200, 0.1);
+      color: #6496c8;
+      border: 1px solid rgba(100, 150, 200, 0.3);
+    }
+
+    .message-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .message-content {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .close-btn {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: currentColor;
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .close-btn:hover {
+      opacity: 1;
+    }
+
+    .info-box {
+      background-color: var(--vscode-inputOption-activeBackground);
+      border-left: 3px solid var(--vscode-focusBorder);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 2px;
+      font-size: 12px;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .balance-display {
+      background-color: var(--vscode-inputOption-activeBackground);
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .balance-amount {
+      font-size: 24px;
+      font-weight: 600;
+      color: #4ec9b0;
+    }
+
+    .balance-label {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 4px;
+    }
+
+    .config-error {
+      padding: 12px;
+      background-color: rgba(206, 145, 120, 0.1);
+      border: 1px solid rgba(206, 145, 120, 0.3);
+      border-radius: 3px;
+      color: #ce9178;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .settings-link {
+      color: var(--vscode-textLink-foreground);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 11px;
+    }
+
+    .settings-link:hover {
+      color: var(--vscode-textLink-activeForeground);
+    }
+
+    .log-section {
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: var(--vscode-editorGroupHeader-tabsBackground);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 3px;
+      padding: 8px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .log-entry {
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--vscode-panel-border);
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    @media (max-height: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      .section {
+        margin-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-title">Prime SMS Hub</div>
+      <div id="statusBadge" class="status-badge loading"></div>
+    </div>
+
+    <!-- Configuration Warning -->
+    <div id="configError" class="config-error" style="display: none;">
+      ⚠️ API not configured. Please set your API key in VS Code settings.
+      <br><br>
+      <span class="settings-link" id="openSettingsLink">Open Settings →</span>
+    </div>
+
+    <!-- Messages -->
+    <div id="messagesContainer"></div>
+
+    <!-- Send SMS Section -->
+    <div class="section" id="sendSMSSection">
+      <div class="section-title">Send SMS</div>
+      
+      <div class="form-group">
+        <label for="country">Country</label>
+        <select id="country" required>
+          <option value="">Select Country</option>
+          <option value="US">🇺🇸 United States</option>
+          <option value="UK">🇬🇧 United Kingdom</option>
+          <option value="NG">🇳🇬 Nigeria</option>
+          <option value="IN">🇮🇳 India</option>
+          <option value="FR">🇫🇷 France</option>
+          <option value="DE">🇩🇪 Germany</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="AU">🇦🇺 Australia</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="service">Service</label>
+        <select id="service" required>
+          <option value="">Select Service</option>
+          <option value="google">Google</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="telegram">Telegram</option>
+          <option value="facebook">Facebook</option>
+          <option value="twitter">Twitter</option>
+          <option value="instagram">Instagram</option>
+          <option value="uber">Uber</option>
+          <option value="amazon">Amazon</option>
+        </select>
+      </div>
+
+      <div class="button-group full">
+        <button class="btn-primary" id="sendSMSBtn">
+          📱 Send SMS / Get Number
+        </button>
+      </div>
+
+      <div id="smsResponse"></div>
+    </div>
+
+    <!-- Balance Section -->
+    <div class="section" id="balanceSection">
+      <div class="section-title">Account Balance</div>
+      
+      <div class="button-group full">
+        <button class="btn-secondary" id="checkBalanceBtn">
+          💳 Check Balance
+        </button>
+      </div>
+
+      <div id="balanceResponse"></div>
+    </div>
+
+    <!-- Logs Section (Optional) -->
+    <div class="section" id="logsSection" style="display: none;">
+      <div class="section-title">Recent Activity</div>
+      
+      <div id="activityLog"></div>
+
+      <div class="button-group full" style="margin-top: 12px;">
+        <button class="btn-secondary" id="clearLogsBtn">
+          🗑️ Clear Log
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API Client is injected by extension.js
+    // This script runs in a webview context with restricted access
+
+    class SidebarController {
+      constructor() {
+        this.apiClient = null
+        this.isInitialized = false
+        this.activityLogs = []
+        this.init()
+      }
+
+      async init() {
+        // Listen for messages from the extension
+        window.addEventListener('message', (event) => {
+          const message = event.data
+          
+          switch (message.type) {
+            case 'api-config':
+              this.handleApiConfig(message)
+              break
+            case 'api-response':
+              this.handleApiResponse(message)
+              break
+            case 'error':
+              this.showError(message.error)
+              break
+          }
+        })
+
+        // Attach event listeners
+        this.attachEventListeners()
+
+        // Request API configuration from extension
+        this.requestApiConfig()
+
+        this.isInitialized = true
+      }
+
+      requestApiConfig() {
+        window.vscodeApi.postMessage({ type: 'get-config' })
+      }
+
+      handleApiConfig(message) {
+        const { baseUrl, apiKey, isConfigured } = message
+
+        if (!isConfigured || !apiKey) {
+          this.showConfigError()
+          return
+        }
+
+        // Create API client
+        this.apiClient = new PrimeSMSHubApiClient(baseUrl, apiKey)
+        this.updateStatus('connected')
+        this.showInfo('API configured and ready to use')
+      }
+
+      attachEventListeners() {
+        // Send SMS button
+        document.getElementById('sendSMSBtn').addEventListener('click', () => {
+          this.handleSendSMS()
+        })
+
+        // Check Balance button
+        document.getElementById('checkBalanceBtn').addEventListener('click', () => {
+          this.handleCheckBalance()
+        })
+
+        // Clear Logs button
+        document.getElementById('clearLogsBtn')?.addEventListener('click', () => {
+          this.activityLogs = []
+          document.getElementById('activityLog').textContent = 'Log cleared'
+        })
+
+        // Settings link
+        document.getElementById('openSettingsLink')?.addEventListener('click', () => {
+          window.vscodeApi.postMessage({ type: 'open-settings' })
+        })
+      }
+
+      async handleSendSMS() {
+        if (!this.apiClient) {
+          this.showError('API not configured')
+          return
+        }
+
+        const country = document.getElementById('country').value
+        const service = document.getElementById('service').value
+
+        if (!country || !service) {
+          this.showError('Please select both country and service')
+          return
+        }
+
+        this.setButtonLoading('sendSMSBtn', true)
+
+        try {
+          const btn = document.getElementById('sendSMSBtn')
+          const response = await this.apiClient.sendSMS(country, service)
+
+          this.addActivityLog(`Purchased number: +${response.phoneNumber}`)
+
+          // Display result
+          const resultHtml = `
+            <div class="message success">
+              <div class="message-icon">✅</div>
+              <div class="message-content">
+                <strong>SMS Sent Successfully!</strong><br>
+                <strong>Number:</strong> +${response.phoneNumber}<br>
+                <strong>Service:</strong> ${response.service}<br>
+                <strong>Country:</strong> ${response.country}<br>
+                <strong>Price:</strong> $${response.price}<br>
+                <strong>Expires:</strong> ${new Date(response.expiresAt).toLocaleString()}
+              </div>
+            </div>
+          `
+          document.getElementById('smsResponse').innerHTML = resultHtml
+          this.showSuccess('Virtual number obtained! Waiting for SMS...')
+        } catch (error) {
+          this.showError(`Failed to get number: ${error.message}`)
+          document.getElementById('smsResponse').innerHTML = ''
+        } finally {
+          this.setButtonLoading('sendSMSBtn', false)
+        }
+      }
+
+      async handleCheckBalance() {
+        if (!this.apiClient) {
+          this.showError('API not configured')
+          return
+        }
+
+        this.setButtonLoading('checkBalanceBtn', true)
+
+        try {
+          const response = await this.apiClient.getBalance()
+
+          this.addActivityLog(`Checked balance: $${response.balance}`)
+
+          // Display balance
+          const resultHtml = `
+            <div class="balance-display">
+              <div class="balance-amount">$${response.balance.toFixed(2)}</div>
+              <div class="balance-label">Current Balance</div>
+              ${response.rating ? `<div class="balance-label">Rating: ${response.rating}</div>` : ''}
+            </div>
+          `
+          document.getElementById('balanceResponse').innerHTML = resultHtml
+          this.showSuccess('Balance retrieved successfully')
+        } catch (error) {
+          this.showError(`Failed to get balance: ${error.message}`)
+          document.getElementById('balanceResponse').innerHTML = ''
+        } finally {
+          this.setButtonLoading('checkBalanceBtn', false)
+        }
+      }
+
+      showConfigError() {
+        document.getElementById('configError').style.display = 'block'
+        this.updateStatus('disconnected')
+      }
+
+      showError(message) {
+        this.addMessage(message, 'error')
+      }
+
+      showSuccess(message) {
+        this.addMessage(message, 'success')
+      }
+
+      showInfo(message) {
+        this.addMessage(message, 'info')
+      }
+
+      addMessage(text, type = 'info') {
+        const container = document.getElementById('messagesContainer')
+        const id = 'msg-' + Date.now()
+
+        const messageEl = document.createElement('div')
+        messageEl.className = `message ${type}`
+        messageEl.id = id
+        messageEl.innerHTML = `
+          <div class="message-icon">
+            ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+          </div>
+          <div class="message-content">${this.escapeHtml(text)}</div>
+          <button class="close-btn" onclick="document.getElementById('${id}').remove()">×</button>
+        `
+
+        container.insertBefore(messageEl, container.firstChild)
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          const el = document.getElementById(id)
+          if (el) el.remove()
+        }, 5000)
+      }
+
+      addActivityLog(entry) {
+        const timestamp = new Date().toLocaleTimeString()
+        this.activityLogs.unshift(`[${timestamp}] ${entry}`)
+        this.activityLogs = this.activityLogs.slice(0, 50) // Keep last 50
+
+        const logEl = document.getElementById('activityLog')
+        if (logEl) {
+          logEl.innerHTML = this.activityLogs
+            .map((log) => `<div class="log-entry">${this.escapeHtml(log)}</div>`)
+            .join('')
+        }
+      }
+
+      setButtonLoading(buttonId, isLoading) {
+        const btn = document.getElementById(buttonId)
+        btn.disabled = isLoading
+        if (isLoading) {
+          btn.classList.add('loading')
+        } else {
+          btn.classList.remove('loading')
+        }
+      }
+
+      updateStatus(status) {
+        const badge = document.getElementById('statusBadge')
+        badge.className = `status-badge ${status}`
+      }
+
+      escapeHtml(text) {
+        const div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+      }
+    }
+
+    // API Client class (before instantiation)
+    class PrimeSMSHubApiClient {
+      constructor(baseUrl, apiKey, logRequests = false) {
+        this.baseUrl = baseUrl || 'https://your-app-name.onrender.com/api'
+        this.apiKey = apiKey
+        this.logRequests = logRequests
+        this.headers = {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        }
+      }
+
+      _log(action, data) {
+        if (this.logRequests) {
+          console.log(`[PrimeSMSHub API] ${action}`, data)
+        }
+      }
+
+      async _request(endpoint, method = 'GET', body = null) {
+        const url = this.baseUrl + endpoint
+        const options = {
+          method,
+          headers: this.headers
+        }
+
+        if (body) {
+          options.body = JSON.stringify(body)
+        }
+
+        this._log(`${method} ${endpoint}`, { url, body: body || '(empty)' })
+
+        try {
+          const response = await fetch(url, options)
+          const data = await response.json()
+
+          this._log(`Response from ${endpoint}`, { status: response.status, data })
+
+          if (!response.ok) {
+            throw new Error(data?.error || `HTTP ${response.status}: ${response.statusText}`)
+          }
+
+          return data
+        } catch (error) {
+          this._log(`Error in ${endpoint}`, { message: error.message })
+          throw error
+        }
+      }
+
+      async sendSMS(country, service) {
+        if (!country || !service) {
+          throw new Error('Country and service are required')
+        }
+
+        return this._request('/sms/send', 'POST', {
+          country,
+          service
+        })
+      }
+
+      async getBalance() {
+        return this._request('/balance', 'GET')
+      }
+
+      async getSMSLogs() {
+        return this._request('/sms/logs', 'GET')
+      }
+    }
+
+    // Inject VS Code API
+    window.vscodeApi = acquireVsCodeApi()
+
+    // Start the sidebar
+    const sidebar = new SidebarController()
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Files to ignore when packaging the extension (.vsix)
+
+# Git
+.git
+.gitignore
+
+# Version control
+.github
+
+# Testing
+test-api.js
+*.test.js
+test/
+
+# Documentation
+SETUP_GUIDE.md
+*.md
+
+# Development
+.vscode
+.vscode-test
+.eslintrc.json
+.prettierrc
+.env
+.env.local
+.env*.local
+
+# Node modules
+node_modules
+npm-debug.log
+*.lock
+
+# IDE
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/

@@ -1,6 +1,6 @@
 /**
- * Prime SMS Hub - Complete Backend Server v2.0
- * ALL-IN-ONE: Includes all services, routes, and APIs directly
+ * Prime SMS Hub - Backend Server for Render Deployment
+ * Node.js + Express API
  * Features: SMS Hub + Support Chat + Payments + Dashboard
  */
 
@@ -12,6 +12,10 @@ const { Server } = require('socket.io')
 const axios = require('axios')
 const admin = require('firebase-admin')
 const crypto = require('crypto')
+
+// Import services and middleware
+const fivesimService = require('./services/fivesim')
+const { authenticateApiKey } = require('./middleware/apikey')
 
 // Initialize Express app
 const app = express()
@@ -71,75 +75,8 @@ try {
   console.warn('⚠️ Redis not available, chat history disabled')
 }
 
-// ================= 5SIM API CLIENT ================= 
-const fivesimClient = axios.create({
-  baseURL: 'https://5sim.net/v1',
-  headers: {
-    'Authorization': `Bearer ${FIVESIM_API_KEY}`,
-    'Accept': 'application/json'
-  }
-})
-
-async function buyNumber(country, service) {
-  try {
-    const response = await fivesimClient.post(`/user/buy/activation/${country}/any/${service}`)
-    if (response.data?.data) {
-      const order = response.data.data
-      return {
-        success: true,
-        orderId: order.id,
-        phoneNumber: order.phone,
-        service: order.service,
-        country: order.country,
-        price: order.cost,
-        status: order.status,
-        expiresAt: order.expires
-      }
-    }
-    return { success: false, error: 'Invalid response from 5sim' }
-  } catch (error) {
-    console.error('5sim error:', error.response?.data?.message || error.message)
-    return { success: false, error: error.response?.data?.message || error.message }
-  }
-}
-
-async function checkSMS(orderId) {
-  try {
-    const response = await fivesimClient.get(`/user/check/${orderId}`)
-    if (response.data?.data) {
-      const order = response.data.data
-      return {
-        success: true,
-        status: order.status,
-        sms: order.sms || null,
-        code: order.sms ? order.sms.split(' ').find(s => /^\d{4,}$/.test(s)) : null,
-        expiresAt: order.expires
-      }
-    }
-    return { success: false, status: 'error', error: 'Invalid response' }
-  } catch (error) {
-    console.error('5sim checkSMS error:', error.message)
-    return { success: false, status: 'error', error: error.message }
-  }
-}
-
-async function cancelOrder(orderId) {
-  try {
-    const response = await fivesimClient.post(`/user/cancel/${orderId}`)
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error.message }
-  }
-}
-
-async function finishOrder(orderId) {
-  try {
-    const response = await fivesimClient.post(`/user/finish/${orderId}`)
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error.message }
-  }
-}
+// ================= 5SIM SERVICE IMPORTED ================= 
+// Using services/fivesim.js for all 5sim API interactions
 
 // ================= PAYSTACK API CLIENT ================= 
 const paystackClient = axios.create({
@@ -316,11 +253,11 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(express.static(path.join(__dirname)))
 
-// CORS headers
+// CORS headers - Allow API key authentication and extensions
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
   if (req.method === 'OPTIONS') return res.sendStatus(200)
   next()
 })
@@ -365,6 +302,9 @@ function rateLimit(max, window) {
 }
 
 app.use('/api/', rateLimit(100, 60000)) // 100 requests per minute
+
+// API Key authentication middleware for /api/* routes
+app.use('/api/', authenticateApiKey)
 
 // ================= TELEGRAM BOT ================= 
 let bot = null
@@ -564,7 +504,91 @@ if (bot) {
 
 // ================= API ROUTES ================= 
 
-// POST /api/number/buy
+// ================= NEW API ROUTES FOR EXTENSIONS ================= 
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  try {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('Health check error:', error)
+    res.status(500).json({ status: 'error' })
+  }
+})
+
+// POST /api/sms/send - Send SMS via 5sim integration
+app.post('/api/sms/send', async (req, res) => {
+  try {
+    const { country, service } = req.body
+
+    if (!country || !service) {
+      return res.status(400).json({ success: false, error: 'Country and service are required' })
+    }
+
+    // Call 5sim service to buy a number
+    const buyResult = await fivesimService.buyNumber(country, service)
+    
+    if (!buyResult.success) {
+      return res.status(400).json({ success: false, error: buyResult.error })
+    }
+
+    res.json({
+      success: true,
+      phoneNumber: buyResult.phoneNumber,
+      orderId: buyResult.orderId,
+      service: buyResult.service,
+      country: buyResult.country,
+      price: buyResult.price,
+      expiresAt: buyResult.expiresAt
+    })
+  } catch (error) {
+    console.error('POST /api/sms/send error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/balance - Get 5sim account balance
+app.get('/api/balance', async (req, res) => {
+  try {
+    const balanceResult = await fivesimService.getBalance()
+    
+    if (!balanceResult.success) {
+      return res.status(400).json({ success: false, error: balanceResult.error })
+    }
+
+    res.json({
+      success: true,
+      balance: balanceResult.balance,
+      frozen: balanceResult.frozen,
+      rating: balanceResult.rating
+    })
+  } catch (error) {
+    console.error('GET /api/balance error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/sms/logs - Get SMS logs (returns empty for now - can be extended)
+app.get('/api/sms/logs', async (req, res) => {
+  try {
+    // This endpoint can be extended to return SMS logs from database
+    // For now, returning a structure that clients can use
+    res.json({
+      success: true,
+      logs: [],
+      total: 0,
+      message: 'SMS logs endpoint ready for integration'
+    })
+  } catch (error) {
+    console.error('GET /api/sms/logs error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// ================= EXISTING API ROUTES (USER AUTHENTICATED) ================= 
 app.post('/api/number/buy', authenticateUser, async (req, res) => {
   try {
     const { country, service } = req.body
@@ -583,7 +607,7 @@ app.post('/api/number/buy', authenticateUser, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Insufficient wallet balance' })
     }
 
-    const buyResult = await buyNumber(country, service)
+    const buyResult = await fivesimService.buyNumber(country, service)
     if (!buyResult.success) {
       return res.status(400).json({ success: false, error: buyResult.error })
     }
@@ -639,7 +663,7 @@ app.get('/api/number/sms/:orderId', authenticateUser, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Unauthorized' })
     }
 
-    const smsResult = await checkSMS(order.fivesimOrderId)
+    const smsResult = await fivesimService.checkSMS(order.fivesimOrderId)
     if (!smsResult.success) {
       return res.status(400).json({ success: false, error: smsResult.error })
     }
@@ -681,7 +705,7 @@ app.post('/api/number/cancel/:orderId', authenticateUser, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Unauthorized' })
     }
 
-    const cancelResult = await cancelOrder(order.fivesimOrderId)
+    const cancelResult = await fivesimService.cancelOrder(order.fivesimOrderId)
     if (!cancelResult.success) {
       return res.status(400).json({ success: false, error: cancelResult.error })
     }
@@ -720,7 +744,7 @@ app.post('/api/number/finish/:orderId', authenticateUser, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Unauthorized' })
     }
 
-    const finishResult = await finishOrder(order.fivesimOrderId)
+    const finishResult = await fivesimService.finishOrder(order.fivesimOrderId)
     if (!finishResult.success) {
       return res.status(400).json({ success: false, error: finishResult.error })
     }
@@ -1006,24 +1030,6 @@ app.post('/paystack/webhook', async (req, res) => {
 // GET /paystack-public-key
 app.get('/paystack-public-key', (req, res) => {
   res.json({ publicKey: PAYSTACK_PUBLIC_KEY })
-})
-
-// GET /health
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    server: 'Prime SMS Hub v2.0',
-    timestamp: new Date().toISOString(),
-    features: {
-      sms_hub: '✅',
-      support_chat: '✅',
-      payments: PAYSTACK_PUBLIC_KEY ? '✅' : '❌',
-      telegram_bot: bot ? '✅' : '❌',
-      firebase: db ? '✅' : '❌',
-      redis: redis ? '✅' : '❌',
-      websocket: '✅'
-    }
-  })
 })
 
 // ================= START SERVER ================= 
