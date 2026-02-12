@@ -26,7 +26,20 @@ async function apiCall(endpoint, options = {}) {
       config.body = JSON.stringify(body);
     }
 
-    const response = await fetch(endpoint, config);
+    // Determine the full URL for the API call
+    // In production, use BACKEND_URL + /api + endpoint
+    // In development (localhost), use relative path
+    let fullUrl = endpoint;
+    if (typeof BACKEND_URL !== 'undefined' && BACKEND_URL && !endpoint.startsWith('http')) {
+      // Ensure endpoint starts with /api if not already
+      const apiEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+      fullUrl = `${BACKEND_URL}${apiEndpoint}`;
+    } else if (!endpoint.startsWith('http')) {
+      // Local development fallback - prepend /api if not present
+      fullUrl = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+    }
+
+    const response = await fetch(fullUrl, config);
     const data = await response.json();
 
     // Handle authentication errors

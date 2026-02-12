@@ -52,7 +52,7 @@ body {
 }
 
 h1 {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 8px;
@@ -60,7 +60,7 @@ h1 {
 }
 
 h2 {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
   color: #6b7280;
   text-align: center;
@@ -80,17 +80,17 @@ h2 {
 }
 
 .input-field label {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: block;
 }
 
 .input-field input {
   width: 100%;
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 16px 20px;
+  font-size: 16px;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
   background-color: #f9fafb;
@@ -117,8 +117,8 @@ h2 {
 
 .btn {
   width: 100%;
-  padding: 14px 20px;
-  font-size: 15px;
+  padding: 18px 24px;
+  font-size: 17px;
   font-weight: 700;
   color: white;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -143,7 +143,7 @@ p {
   font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   padding-left: 0;
-  font-size: 13px;
+  font-size: 15px;
   text-align: center;
   margin-top: 20px;
 }
@@ -153,7 +153,7 @@ a {
   text-decoration: none;
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   display: block;
   margin-top: 14px;
   text-align: center;
@@ -169,42 +169,22 @@ p a {
   margin-top: 0;
 }
 
-/* Responsive Design - Tablets (769px to 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* ════════════════════════════════════════════════════════════ */
+/* RESPONSIVE DESIGN - MOBILE FIRST APPROACH                     */
+/* ════════════════════════════════════════════════════════════ */
+
+/* EXTRA SMALL DEVICES (320px to 480px) */
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
   .login {
-    padding: 36px;
-    max-width: 400px;
-  }
-
-  h1 {
-    font-size: 26px;
-  }
-
-  .input-area {
-    gap: 16px;
-  }
-
-  .input-field input {
-    padding: 11px 14px;
-    font-size: 13px;
-  }
-
-  .btn {
-    padding: 13px 18px;
-    font-size: 14px;
-  }
-}
-
-/* Responsive Design - Small Tablets (600px to 768px) */
-@media (min-width: 600px) and (max-width: 768px) {
-  .login {
-    padding: 32px;
-    max-width: 380px;
-  }
-
-  .logo img {
-    width: 52px;
-    height: 52px;
+    width: 100%;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 100%;
   }
 
   h1 {
@@ -214,7 +194,7 @@ p a {
 
   h2 {
     font-size: 13px;
-    margin-bottom: 28px;
+    margin-bottom: 22px;
   }
 
   .input-area {
@@ -222,720 +202,325 @@ p a {
   }
 
   .input-field label {
-    font-size: 12px;
+    font-size: 13px;
     margin-bottom: 6px;
   }
 
   .input-field input {
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 13px 14px;
+    font-size: 14px;
     border-radius: 8px;
   }
 
-  .auth-button {
-    margin-top: 24px;
-  }
-
   .btn {
-    padding: 12px 16px;
-    font-size: 13px;
+    padding: 14px 16px;
+    font-size: 14px;
     border-radius: 8px;
   }
 
   p {
     font-size: 12px;
-    margin-top: 16px;
-  }
-
-  a {
-    font-size: 12px;
-    margin-top: 12px;
-  }
-}
-
-/* Responsive Design - Mobile Landscape (481px to 599px) */
-@media (min-width: 481px) and (max-width: 599px) {
-  body {
-    padding: 16px;
-  }
-
-  .login {
-    padding: 28px;
-    max-width: 340px;
-  }
-
-  .logo img {
-    width: 48px;
-    height: 48px;
-  }
-
-  h1 {
-    font-size: 22px;
-    margin-bottom: 4px;
-  }
-
-  h2 {
-    font-size: 12px;
-    margin-bottom: 24px;
-  }
-
-  .input-area {
-    gap: 12px;
-  }
-
-  .input-field label {
-    font-size: 11px;
-    margin-bottom: 4px;
-  }
-
-  .input-field input {
-    padding: 9px 11px;
-    font-size: 12px;
-    border-radius: 8px;
-  }
-
-  .auth-button {
-    margin-top: 20px;
-  }
-
-  .btn {
-    padding: 11px 14px;
-    font-size: 12px;
-  }
-
-  p {
-    font-size: 11px;
     margin-top: 14px;
   }
 
   a {
-    font-size: 11px;
+    font-size: 12px;
     margin-top: 10px;
   }
 }
 
-/* Responsive Design - Mobile (320px to 480px) */
-@media (max-width: 480px) {
+/* SMALL DEVICES (481px to 599px) - Mobile Landscape */
+@media (min-width: 481px) and (max-width: 599px) {
   body {
-    padding: 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
 
   .login {
-    padding: 24px;
-    max-width: 100%;
-    border-radius: 16px;
-  }
-
-  .logo {
-    margin-bottom: 24px;
-  }
-
-  .logo img {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-  }
-
-  h1 {
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-
-  h2 {
-    font-size: 12px;
-    margin-bottom: 20px;
-  }
-
-  .input-area {
-    gap: 12px;
-  }
-
-  .input-field label {
-    font-size: 11px;
-    margin-bottom: 4px;
-    font-weight: 600;
-  }
-
-  .input-field input {
     width: 100%;
-    padding: 11px 12px;
-    font-size: 13px;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-  }
-
-  .input-field input:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .auth-button {
-    margin-top: 20px;
-  }
-
-  .btn {
-    padding: 12px 14px;
-    font-size: 13px;
-    border-radius: 8px;
-    font-weight: 600;
-  }
-
-  .btn:hover {
-    transform: translateY(-2px);
-  }
-
-  p {
-    font-size: 12px;
-    margin-top: 16px;
-  }
-
-  a {
-    font-size: 12px;
-    margin-top: 10px;
-  }
-}
-p{
-    color: blue;
-    font-weight: 800;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding-left: 10px;
-    font-size: 18px;
-
-}
-
-/* Responsive Design - Desktop (1025px and above) */
-@media (min-width: 1025px) {
-  body {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 20px;
-  }
-
-  .login {
-    width: 450px;
-    background: white;
-    padding: 50px;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 102, 255, 0.12);
-  }
-
-  .logo img {
-    width: 60px;
-    padding-right: 0;
+    padding: 24px;
+    max-width: 350px;
     border-radius: 12px;
   }
 
   h1 {
-    padding-right: 0;
-    font-size: 32px;
-    margin-top: 24px;
-    margin-bottom: 8px;
+    font-size: 26px;
+    margin-bottom: 6px;
   }
 
   h2 {
-    padding-right: 0;
-    font-size: 16px;
-    margin-bottom: 32px;
-  }
-
-  .input-area .input-field {
-    margin-top: 24px;
-  }
-
-  .input-area .input-field input {
-    font-size: 15px;
-  }
-
-  .input-area .input-field label {
     font-size: 14px;
-    margin-bottom: 8px;
-    display: block;
+    margin-bottom: 24px;
   }
 
-  .auth-button {
-    margin-top: 28px;
+  .input-area {
+    gap: 15px;
+  }
+
+  .input-field label {
+    font-size: 14px;
+    margin-bottom: 7px;
+  }
+
+  .input-field input {
+    padding: 14px 15px;
+    font-size: 15px;
+    border-radius: 8px;
   }
 
   .btn {
-    width: 100%;
-    height: 48px;
-    font-size: 16px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-    color: white;
-    cursor: pointer;
-    transition: all 200ms ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
-  }
-
-  a {
-    color: #0066ff;
-    font-size: 14px;
-    display: inline-block;
-    margin-top: 16px;
-    transition: color 200ms ease;
-  }
-
-  a:hover {
-    color: #0052cc;
+    padding: 15px 18px;
+    font-size: 15px;
+    border-radius: 8px;
   }
 
   p {
-    color: #1f2937;
-    font-size: 14px;
-    font-weight: 400;
-    padding-left: 0;
-    margin-top: 16px;
+    font-size: 13px;
+    margin-top: 15px;
   }
 
-  p a {
-    color: #0066ff;
-    font-weight: 600;
+  a {
+    font-size: 13px;
+    margin-top: 11px;
   }
 }
 
-/* Responsive Design - Tablets (769px to 1024px) */
+/* MEDIUM DEVICES (600px to 768px) - Tablets */
+@media (min-width: 600px) and (max-width: 768px) {
+  body {
+    padding: 18px;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  }
+
+  .login {
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+  }
+
+  h1 {
+    font-size: 28px;
+    margin-bottom: 7px;
+  }
+
+  h2 {
+    font-size: 15px;
+    margin-bottom: 26px;
+  }
+
+  .input-area {
+    gap: 16px;
+  }
+
+  .input-field label {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .input-field input {
+    padding: 15px 16px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .btn {
+    padding: 16px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  p {
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  a {
+    font-size: 13px;
+    margin-top: 12px;
+  }
+}
+
+/* LARGE DEVICES (769px to 1024px) - iPad / Large Tablets */
 @media (min-width: 769px) and (max-width: 1024px) {
   body {
+    padding: 24px;
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    justify-content: center;
-    min-height: 100vh;
-    padding: 30px 16px;
   }
 
   .login {
     width: 100%;
     max-width: 420px;
-    background: white;
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 102, 255, 0.1);
-  }
-
-  .logo img {
-    width: 50px;
-    padding-right: 0;
-    border-radius: 10px;
+    border-radius: 16px;
+    box-shadow: 0 10px 32px rgba(102, 126, 234, 0.15);
   }
 
   h1 {
-    padding-right: 0;
-    font-size: 28px;
-    margin-top: 20px;
+    font-size: 32px;
     margin-bottom: 8px;
   }
 
   h2 {
-    padding-right: 0;
-    font-size: 15px;
+    font-size: 16px;
     margin-bottom: 28px;
   }
 
-  .input-area .input-field {
-    margin-top: 20px;
-    height: 44px;
+  .input-area {
+    gap: 18px;
   }
 
-  .input-area .input-field input {
-    font-size: 14px;
-    padding: 0 12px 0 20px;
+  .input-field label {
+    font-size: 16px;
+    margin-bottom: 10px;
   }
 
-  .input-area .input-field label {
-    font-size: 13px;
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  .auth-button {
-    margin-top: 24px;
-    height: 44px;
-  }
-
-  .btn {
-    width: 100%;
-    height: 44px;
-    font-size: 15px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-    color: white;
-    cursor: pointer;
-    transition: all 200ms ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 102, 255, 0.25);
-  }
-
-  a {
-    color: #0066ff;
-    font-size: 13px;
-    display: inline-block;
-    margin-top: 14px;
-    transition: color 200ms ease;
-  }
-
-  a:hover {
-    color: #0052cc;
-  }
-
-  p {
-    color: #1f2937;
-    font-size: 13px;
-    font-weight: 400;
-    padding-left: 0;
-    margin-top: 14px;
-  }
-
-  p a {
-    color: #0066ff;
-    font-weight: 600;
-  }
-}
-
-/* Responsive Design - Small Tablets (600px to 768px) */
-@media (min-width: 600px) and (max-width: 768px) {
-  body {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    justify-content: center;
-    min-height: 100vh;
-    padding: 24px 12px;
-  }
-
-  .login {
-    width: 100%;
-    max-width: 380px;
-    background: white;
-    padding: 32px;
-    border-radius: 12px;
-    box-shadow: 0 6px 24px rgba(0, 102, 255, 0.08);
-  }
-
-  .logo img {
-    width: 45px;
-    padding-right: 0;
-    border-radius: 8px;
-  }
-
-  h1 {
-    padding-right: 0;
-    font-size: 24px;
-    margin-top: 18px;
-    margin-bottom: 6px;
-  }
-
-  h2 {
-    padding-right: 0;
-    font-size: 14px;
-    margin-bottom: 24px;
-    color: #6b7280;
-  }
-
-  .input-area .input-field {
-    margin-top: 18px;
-    height: 42px;
-  }
-
-  .input-area .input-field input {
-    font-size: 14px;
-    padding: 0 12px 0 18px;
-    border-radius: 6px;
-  }
-
-  .input-area .input-field label {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    display: block;
-    color: #1f2937;
-  }
-
-  .auth-button {
-    margin-top: 22px;
-    height: 42px;
-  }
-
-  .btn {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 200ms ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.2);
-  }
-
-  a {
-    color: #0066ff;
-    font-size: 12px;
-    display: inline-block;
-    margin-top: 12px;
-    transition: color 200ms ease;
-  }
-
-  a:hover {
-    color: #0052cc;
-  }
-
-  p {
-    color: #1f2937;
-    font-size: 12px;
-    font-weight: 400;
-    padding-left: 0;
-    margin-top: 12px;
-  }
-
-  p a {
-    color: #0066ff;
-    font-weight: 600;
-  }
-}
-
-/* Responsive Design - Mobile Landscape (481px to 599px) */
-@media (min-width: 481px) and (max-width: 599px) {
-  body {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 16px 10px;
-  }
-
-  .login {
-    width: 100%;
-    max-width: 320px;
-    background: white;
-    padding: 28px;
+  .input-field input {
+    padding: 15px 18px;
+    font-size: 16px;
     border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0, 102, 255, 0.08);
-  }
-
-  .logo img {
-    width: 40px;
-    padding-right: 0;
-    border-radius: 6px;
-  }
-
-  h1 {
-    padding-right: 0;
-    font-size: 20px;
-    margin-top: 16px;
-    margin-bottom: 4px;
-  }
-
-  h2 {
-    padding-right: 0;
-    font-size: 12px;
-    margin-bottom: 20px;
-    color: #6b7280;
-  }
-
-  .input-area .input-field {
-    margin-top: 16px;
-    height: 40px;
-  }
-
-  .input-area .input-field input {
-    font-size: 13px;
-    padding: 0 10px 0 16px;
-    border-radius: 6px;
-  }
-
-  .input-area .input-field label {
-    font-size: 11px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    display: block;
-    color: #1f2937;
-  }
-
-  .auth-button {
-    margin-top: 20px;
-    height: 40px;
   }
 
   .btn {
-    width: 100%;
-    height: 40px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-    color: white;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: all 200ms ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(0, 102, 255, 0.15);
-  }
-
-  a {
-    color: #0066ff;
-    font-size: 11px;
-    display: inline-block;
-    margin-top: 10px;
-    transition: color 200ms ease;
-  }
-
-  a:hover {
-    color: #0052cc;
+    padding: 16px 22px;
+    font-size: 16px;
+    border-radius: 10px;
   }
 
   p {
-    color: #1f2937;
-    font-size: 11px;
-    font-weight: 400;
-    padding-left: 0;
-    margin-top: 10px;
+    font-size: 15px;
+    margin-top: 18px;
   }
 
-  p a {
-    color: #0066ff;
-    font-weight: 600;
+  a {
+    font-size: 14px;
+    margin-top: 13px;
   }
 }
 
-/* Responsive Design - Mobile (320px to 480px) */
-@media (max-width: 480px) {
+/* EXTRA LARGE DEVICES (1025px to 1440px) - Desktop */
+@media (min-width: 1025px) and (max-width: 1440px) {
   body {
+    padding: 40px 20px;
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 16px 12px;
   }
 
   .login {
-    width: 100%;
-    max-width: 100%;
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .logo {
-    margin-bottom: 8px;
+    width: 450px;
+    max-width: 90%;
+    padding: 48px;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12);
   }
 
   .logo img {
-    width: 36px;
-    padding-right: 0;
-    border-radius: 6px;
+    width: 62px;
+    height: 62px;
   }
 
   h1 {
-    padding-right: 0;
-    font-size: 20px;
-    margin-top: 16px;
-    margin-bottom: 4px;
-    text-align: center;
+    font-size: 36px;
+    margin-bottom: 10px;
   }
 
   h2 {
-    padding-right: 0;
-    font-size: 12px;
-    margin-bottom: 20px;
-    color: #6b7280;
-    text-align: center;
+    font-size: 17px;
+    margin-bottom: 32px;
   }
 
   .input-area {
-    margin: 0;
+    gap: 20px;
   }
 
-  .input-area .input-field {
-    margin-top: 16px;
-    height: 40px;
-    width: 100%;
+  .input-field label {
+    font-size: 16px;
+    margin-bottom: 10px;
   }
 
-  .input-area .input-field input {
-    width: 100%;
-    height: 100%;
-    font-size: 13px;
-    padding: 0 12px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-  }
-
-  .input-area .input-field label {
-    font-size: 11px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    display: block;
-    color: #1f2937;
-  }
-
-  .auth-button {
-    margin-top: 20px;
-    height: 40px;
-    width: 100%;
+  .input-field input {
+    padding: 16px 20px;
+    font-size: 16px;
+    border-radius: 10px;
   }
 
   .btn {
-    width: 100%;
-    height: 40px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-    color: white;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: all 200ms ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 102, 255, 0.2);
-  }
-
-  .btn:active {
-    transform: scale(0.98);
-  }
-
-  a {
-    color: #0066ff;
-    font-size: 12px;
-    display: block;
-    margin-top: 12px;
-    text-align: center;
-    transition: color 200ms ease;
-  }
-
-  a:hover {
-    color: #0052cc;
+    padding: 18px 24px;
+    font-size: 17px;
+    border-radius: 10px;
   }
 
   p {
-    color: #1f2937;
-    font-size: 12px;
-    font-weight: 400;
-    padding-left: 0;
-    margin-top: 12px;
-    text-align: center;
+    font-size: 15px;
+    margin-top: 20px;
   }
 
-  p a {
-    color: #0066ff;
-    font-weight: 600;
-    display: inline;
+  a {
+    font-size: 15px;
+    margin-top: 14px;
+  }
+}
+
+/* ULTRA WIDE DEVICES (1441px and above) - Large Desktop / 4K */
+@media (min-width: 1441px) {
+  body {
+    padding: 50px 40px;
+    background: linear-gradient(135deg, #f5f8ff 0%, #f8fafc 100%);
+  }
+
+  .login {
+    width: 500px;
+    max-width: 95%;
+    padding: 56px;
+    border-radius: 20px;
+    box-shadow: 0 16px 50px rgba(102, 126, 234, 0.15);
+  }
+
+  .logo img {
+    width: 70px;
+    height: 70px;
+  }
+
+  h1 {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 18px;
+    margin-bottom: 36px;
+  }
+
+  .input-area {
+    gap: 22px;
+  }
+
+  .input-field label {
+    font-size: 17px;
+    margin-bottom: 12px;
+  }
+
+  .input-field input {
+    padding: 18px 22px;
+    font-size: 17px;
+    border-radius: 12px;
+    min-height: 50px;
+  }
+
+  .btn {
+    padding: 20px 28px;
+    font-size: 18px;
+    border-radius: 12px;
+    min-height: 56px;
+  }
+
+  p {
+    font-size: 16px;
+    margin-top: 22px;
+  }
+
+  a {
+    font-size: 16px;
+    margin-top: 16px;
   }
 }
