@@ -1,11 +1,7 @@
 /**
- * Prime SMS Hub - Complete Backend Server
- * Features: SMS Hub + Support Chat Relay
- * 
- * Combines:
- * 1. Old server features (support chat, message relay)
- * 2. New SMS hub features (number buying, OTP polling, Paystack)
- * 3. User details capturing for support chats
+ * Prime SMS Hub - Complete Backend Server v2.0
+ * ALL-IN-ONE: Includes all services, routes, and APIs directly
+ * Features: SMS Hub + Support Chat + Payments + Dashboard
  */
 
 require('dotenv').config()
@@ -14,13 +10,8 @@ const http = require('http')
 const path = require('path')
 const { Server } = require('socket.io')
 const axios = require('axios')
-
-// Import services and routes
-const numberRoutes = require('./routes/numbers')
-const dashboardRoutes = require('./routes/dashboard')
-const fundsRoutes = require('./routes/funds')
-const { authenticateUser, errorHandler, rateLimit } = require('./middleware/auth')
-const PrimeSMSBot = require('./telegram-bot/bot')
+const admin = require('firebase-admin')
+const crypto = require('crypto')
 
 // Initialize Express app
 const app = express()
@@ -39,8 +30,32 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY || ''
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || ''
 const FIVESIM_API_KEY = process.env.FIVESIM_API_KEY || ''
-const DEFAULT_CHAT_ID = process.env.DEFAULT_CHAT_ID || 7711425125 // Admin chat ID for support messages
+const DEFAULT_CHAT_ID = process.env.DEFAULT_CHAT_ID || 7711425125
 const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`
+
+// Firebase initialization
+let db = null
+try {
+  if (!admin.apps.length) {
+    const firebaseConfig = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL
+    }
+    
+    if (firebaseConfig.projectId && firebaseConfig.privateKey && firebaseConfig.clientEmail) {
+      admin.initializeApp({
+        credential: admin.credential.cert(firebaseConfig)
+      })
+      db = admin.firestore()
+      console.log('✅ Firebase initialized')
+    }
+  } else {
+    db = admin.firestore()
+  }
+} catch (error) {
+  console.warn('⚠️ Firebase initialization warning:', error.message)
+}
 
 // Redis setup for chat history
 let redis = null
@@ -53,7 +68,247 @@ try {
     })
   }
 } catch (e) {
-  console.warn('Redis not available, chat history disabled')
+  console.warn('⚠️ Redis not available, chat history disabled')
+}
+
+// ================= 5SIM API CLIENT ================= 
+const fivesimClient = axios.create({
+  baseURL: 'https://5sim.net/v1',
+  headers: {
+    'Authorization': `Bearer ${FIVESIM_API_KEY}`,
+    'Accept': 'application/json'
+  }
+})
+
+async function buyNumber(country, service) {
+  try {
+    const response = await fivesimClient.post(`/user/buy/activation/${country}/any/${service}`)
+    if (response.data?.data) {
+      const order = response.data.data
+      return {
+        success: true,
+        orderId: order.id,
+        phoneNumber: order.phone,
+        service: order.service,
+        country: order.country,
+        price: order.cost,
+        status: order.status,
+        expiresAt: order.expires
+      }
+    }
+    return { success: false, error: 'Invalid response from 5sim' }
+  } catch (error) {
+    console.error('5sim error:', error.response?.data?.message || error.message)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
+}
+
+async function checkSMS(orderId) {
+  try {
+    const response = await fivesimClient.get(`/user/check/${orderId}`)
+    if (response.data?.data) {
+      const order = response.data.data
+      return {
+        success: true,
+        status: order.status,
+        sms: order.sms || null,
+        code: order.sms ? order.sms.split(' ').find(s => /^\d{4,}$/.test(s)) : null,
+        expiresAt: order.expires
+      }
+    }
+    return { success: false, status: 'error', error: 'Invalid response' }
+  } catch (error) {
+    console.error('5sim checkSMS error:', error.message)
+    return { success: false, status: 'error', error: error.message }
+  }
+}
+
+async function cancelOrder(orderId) {
+  try {
+    const response = await fivesimClient.post(`/user/cancel/${orderId}`)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+async function finishOrder(orderId) {
+  try {
+    const response = await fivesimClient.post(`/user/finish/${orderId}`)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+// ================= PAYSTACK API CLIENT ================= 
+const paystackClient = axios.create({
+  baseURL: 'https://api.paystack.co',
+  headers: {
+    'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+    'Content-Type': 'application/json'
+  }
+})
+
+async function initializePayment(email, amount, reference) {
+  try {
+    const response = await paystackClient.post('/transaction/initialize', {
+      email,
+      amount,
+      reference
+    })
+    if (response.data?.status) {
+      return {
+        success: true,
+        authorizationUrl: response.data.data.authorization_url,
+        accessCode: response.data.data.access_code,
+        reference: response.data.data.reference
+      }
+    }
+    return { success: false, error: 'Failed to initialize payment' }
+  } catch (error) {
+    console.error('Paystack error:', error.response?.data?.message || error.message)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
+}
+
+async function verifyPayment(reference) {
+  try {
+    const response = await paystackClient.get(`/transaction/verify/${reference}`)
+    if (response.data?.status) {
+      const data = response.data.data
+      if (data.status === 'success') {
+        return {
+          success: true,
+          status: 'success',
+          reference: data.reference,
+          amount: data.amount / 100,
+          currency: data.currency,
+          email: data.customer.email
+        }
+      }
+    }
+    return { success: false, error: 'Payment verification failed' }
+  } catch (error) {
+    console.error('Paystack verify error:', error.message)
+    return { success: false, error: error.message }
+  }
+}
+
+// ================= FIREBASE SERVICE FUNCTIONS ================= 
+async function getUser(uid) {
+  try {
+    if (!db) return null
+    const doc = await db.collection('users').doc(uid).get()
+    return doc.exists ? { id: uid, ...doc.data() } : null
+  } catch (error) {
+    return null
+  }
+}
+
+async function setUser(uid, userData) {
+  try {
+    if (!db) return { success: false }
+    await db.collection('users').doc(uid).set(userData, { merge: true })
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+async function saveOrder(orderData) {
+  try {
+    if (!db) return { success: false }
+    const docRef = await db.collection('orders').add({
+      ...orderData,
+      createdAt: new Date().toISOString()
+    })
+    return { success: true, orderId: docRef.id }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+async function updateOrder(docId, updateData) {
+  try {
+    if (!db) return { success: false }
+    await db.collection('orders').doc(docId).update(updateData)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+async function getOrder(orderId) {
+  try {
+    if (!db) return null
+    const doc = await db.collection('orders').doc(orderId).get()
+    return doc.exists ? { id: orderId, ...doc.data() } : null
+  } catch (error) {
+    return null
+  }
+}
+
+async function getUserOrders(uid) {
+  try {
+    if (!db) return { orders: [] }
+    const snapshot = await db.collection('orders')
+      .where('uid', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .get()
+    const orders = []
+    snapshot.forEach(doc => orders.push({ id: doc.id, ...doc.data() }))
+    return { success: true, orders }
+  } catch (error) {
+    return { success: false, orders: [] }
+  }
+}
+
+async function saveTransaction(txData) {
+  try {
+    if (!db) return { success: false }
+    const docRef = await db.collection('transactions').add({
+      ...txData,
+      createdAt: new Date().toISOString()
+    })
+    return { success: true, id: docRef.id }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+async function getUserTransactions(uid) {
+  try {
+    if (!db) return { transactions: [] }
+    const snapshot = await db.collection('transactions')
+      .where('uid', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .get()
+    const transactions = []
+    snapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }))
+    return { success: true, transactions }
+  } catch (error) {
+    return { success: false, transactions: [] }
+  }
+}
+
+async function addToWallet(uid, amount) {
+  try {
+    if (!db) return { success: false }
+    const userRef = db.collection('users').doc(uid)
+    const user = await getUser(uid)
+    const currentBalance = user?.wallet || 0
+    const newBalance = currentBalance + amount
+    
+    await userRef.update({
+      wallet: newBalance,
+      updatedAt: new Date().toISOString()
+    })
+    
+    return { success: true, newBalance }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
 }
 
 // ================= MIDDLEWARE ================= 
@@ -70,7 +325,45 @@ app.use((req, res, next) => {
   next()
 })
 
+// Authentication middleware
+async function authenticateUser(req, res, next) {
+  try {
+    const token = req.headers.authorization?.split('Bearer ')[1]
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'No token provided' })
+    }
+    
+    if (!admin.apps.length || !admin.auth) {
+      return res.status(500).json({ success: false, error: 'Auth not configured' })
+    }
+    
+    const decodedToken = await admin.auth().verifyIdToken(token)
+    req.user = { uid: decodedToken.uid, email: decodedToken.email }
+    next()
+  } catch (error) {
+    res.status(401).json({ success: false, error: 'Invalid token' })
+  }
+}
+
 // Rate limiting
+const requestCounts = new Map()
+function rateLimit(max, window) {
+  return (req, res, next) => {
+    const key = req.ip
+    const now = Date.now()
+    const requests = requestCounts.get(key) || []
+    const recentRequests = requests.filter(t => now - t < window)
+    
+    if (recentRequests.length >= max) {
+      return res.status(429).json({ error: 'Too many requests' })
+    }
+    
+    recentRequests.push(now)
+    requestCounts.set(key, recentRequests)
+    next()
+  }
+}
+
 app.use('/api/', rateLimit(100, 60000)) // 100 requests per minute
 
 // ================= TELEGRAM BOT ================= 
@@ -82,10 +375,14 @@ if (TELEGRAM_BOT_TOKEN) {
     const TelegramBot = require('node-telegram-bot-api')
     bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false })
     
-    // Initialize SMS hub bot
-    primeSMSBot = new PrimeSMSBot(TELEGRAM_BOT_TOKEN)
+    // Try to initialize SMS bot if available
+    try {
+      const PrimeSMSBot = require('./telegram-bot/bot')
+      primeSMSBot = new PrimeSMSBot(TELEGRAM_BOT_TOKEN)
+    } catch (e) {
+      console.warn('⚠️ SMS bot module not available')
+    }
     
-    // Webhook endpoint for Telegram
     const botEndpoint = `/bot${TELEGRAM_BOT_TOKEN}`
     if (SERVER_URL !== `http://localhost:${PORT}`) {
       bot.setWebHook(`${SERVER_URL}${botEndpoint}`)
@@ -101,7 +398,7 @@ if (TELEGRAM_BOT_TOKEN) {
     console.error('⚠️ Telegram bot error:', err.message)
   }
 } else {
-  console.warn('⚠️ TELEGRAM_BOT_TOKEN not set - Telegram features disabled')
+  console.warn('⚠️ TELEGRAM_BOT_TOKEN not set')
 }
 
 // ================= ACTIVE WEB SOCKETS ================= 
@@ -267,19 +564,375 @@ if (bot) {
 
 // ================= API ROUTES ================= 
 
-// Mount SMS Hub routes
-app.use('/api/number', numberRoutes)
-app.use('/api/dashboard', dashboardRoutes)
-app.use('/api/funds', fundsRoutes)
+// POST /api/number/buy
+app.post('/api/number/buy', authenticateUser, async (req, res) => {
+  try {
+    const { country, service } = req.body
+    const uid = req.user.uid
 
-/**
- * GET /api/messages
- * Get chat history from Redis
- */
+    if (!country || !service) {
+      return res.status(400).json({ success: false, error: 'Country and service required' })
+    }
+
+    const user = await getUser(uid)
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    if ((user.wallet || 0) < 1) {
+      return res.status(400).json({ success: false, error: 'Insufficient wallet balance' })
+    }
+
+    const buyResult = await buyNumber(country, service)
+    if (!buyResult.success) {
+      return res.status(400).json({ success: false, error: buyResult.error })
+    }
+
+    const orderData = {
+      uid,
+      fivesimOrderId: buyResult.orderId,
+      phoneNumber: buyResult.phoneNumber,
+      service,
+      country,
+      price: buyResult.price,
+      status: 'pending',
+      sms: null,
+      expiresAt: buyResult.expiresAt,
+      createdAt: new Date().toISOString()
+    }
+
+    const saveResult = await saveOrder(orderData)
+    if (!saveResult.success) {
+      return res.status(500).json({ success: false, error: 'Failed to save order' })
+    }
+
+    await addToWallet(uid, -buyResult.price)
+
+    res.json({
+      success: true,
+      orderId: saveResult.orderId,
+      phoneNumber: buyResult.phoneNumber,
+      service,
+      country,
+      price: buyResult.price,
+      expiresAt: buyResult.expiresAt,
+      message: `Number purchased: ${buyResult.phoneNumber}`
+    })
+  } catch (error) {
+    console.error('POST /api/number/buy error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/number/sms/:orderId
+app.get('/api/number/sms/:orderId', authenticateUser, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const uid = req.user.uid
+
+    const order = await getOrder(orderId)
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' })
+    }
+
+    if (order.uid !== uid) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const smsResult = await checkSMS(order.fivesimOrderId)
+    if (!smsResult.success) {
+      return res.status(400).json({ success: false, error: smsResult.error })
+    }
+
+    if (smsResult.status === 'received' && smsResult.code) {
+      await updateOrder(orderId, {
+        status: 'received',
+        sms: smsResult.sms,
+        code: smsResult.code,
+        receivedAt: new Date().toISOString()
+      })
+    }
+
+    res.json({
+      success: true,
+      status: smsResult.status,
+      sms: smsResult.sms,
+      code: smsResult.code,
+      message: smsResult.status === 'received' ? 'SMS received' : `Status: ${smsResult.status}`
+    })
+  } catch (error) {
+    console.error('GET /api/number/sms error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST /api/number/cancel/:orderId
+app.post('/api/number/cancel/:orderId', authenticateUser, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const uid = req.user.uid
+
+    const order = await getOrder(orderId)
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' })
+    }
+
+    if (order.uid !== uid) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const cancelResult = await cancelOrder(order.fivesimOrderId)
+    if (!cancelResult.success) {
+      return res.status(400).json({ success: false, error: cancelResult.error })
+    }
+
+    await updateOrder(orderId, {
+      status: 'cancelled',
+      cancelledAt: new Date().toISOString()
+    })
+
+    const refundAmount = order.price * 0.9
+    await addToWallet(uid, refundAmount)
+
+    res.json({
+      success: true,
+      message: 'Order cancelled',
+      refunded: refundAmount
+    })
+  } catch (error) {
+    console.error('POST /api/number/cancel error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST /api/number/finish/:orderId
+app.post('/api/number/finish/:orderId', authenticateUser, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const uid = req.user.uid
+
+    const order = await getOrder(orderId)
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' })
+    }
+
+    if (order.uid !== uid) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const finishResult = await finishOrder(order.fivesimOrderId)
+    if (!finishResult.success) {
+      return res.status(400).json({ success: false, error: finishResult.error })
+    }
+
+    await updateOrder(orderId, {
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    })
+
+    res.json({
+      success: true,
+      message: 'Order completed'
+    })
+  } catch (error) {
+    console.error('POST /api/number/finish error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/dashboard
+app.get('/api/dashboard', authenticateUser, async (req, res) => {
+  try {
+    const uid = req.user.uid
+
+    const user = await getUser(uid)
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    const ordersResult = await getUserOrders(uid)
+    const orders = ordersResult.orders || []
+
+    const activeNumbers = orders.filter(o => 
+      o.status === 'pending' || o.status === 'received'
+    )
+
+    const transactionsResult = await getUserTransactions(uid)
+    const recentTransactions = (transactionsResult.transactions || []).slice(0, 5)
+
+    const totalSpent = orders.reduce((sum, o) => sum + (o.price || 0), 0)
+
+    res.json({
+      success: true,
+      wallet: user.wallet || 0,
+      totalSpent: parseFloat(totalSpent.toFixed(2)),
+      activeNumbersCount: activeNumbers.length,
+      totalOrdersCount: orders.length,
+      activeNumbers: activeNumbers.map(o => ({
+        id: o.id,
+        phoneNumber: o.phoneNumber,
+        service: o.service,
+        country: o.country,
+        status: o.status,
+        expiresAt: o.expiresAt,
+        sms: o.sms,
+        code: o.code
+      })),
+      recentTransactions: recentTransactions.map(t => ({
+        id: t.id,
+        amount: t.amount,
+        currency: t.currency || 'USD',
+        reference: t.paystackReference,
+        status: t.status || 'success',
+        createdAt: t.createdAt
+      }))
+    })
+  } catch (error) {
+    console.error('GET /api/dashboard error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/transactions
+app.get('/api/transactions', authenticateUser, async (req, res) => {
+  try {
+    const uid = req.user.uid
+
+    const ordersResult = await getUserOrders(uid)
+    const orders = ordersResult.orders || []
+
+    const transactionsResult = await getUserTransactions(uid)
+    const transactions = transactionsResult.transactions || []
+
+    const numberTransactions = orders.map(o => ({
+      id: o.id,
+      type: 'number_purchase',
+      date: o.createdAt,
+      service: o.service,
+      country: o.country,
+      phoneNumber: o.phoneNumber,
+      price: o.price,
+      status: o.status,
+      orderId: o.id
+    }))
+
+    const walletTransactions = transactions.map(t => ({
+      id: t.id,
+      type: 'wallet_topup',
+      date: t.createdAt,
+      amount: t.amount,
+      currency: t.currency,
+      status: 'completed',
+      reference: t.paystackReference
+    }))
+
+    const allTransactions = [...numberTransactions, ...walletTransactions]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+
+    res.json({
+      success: true,
+      transactions: allTransactions,
+      count: allTransactions.length
+    })
+  } catch (error) {
+    console.error('GET /api/transactions error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST /api/funds/add
+app.post('/api/funds/add', authenticateUser, async (req, res) => {
+  try {
+    const { amount } = req.body
+    const uid = req.user.uid
+    const email = req.user.email
+
+    if (!amount || amount < 1 || amount > 100000) {
+      return res.status(400).json({ success: false, error: 'Invalid amount' })
+    }
+
+    const reference = `PSH-${uid}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
+
+    const paymentResult = await initializePayment(
+      email,
+      Math.round(amount * 100),
+      reference
+    )
+
+    if (!paymentResult.success) {
+      return res.status(400).json({ success: false, error: paymentResult.error })
+    }
+
+    await saveTransaction({
+      uid,
+      amount,
+      currency: 'USD',
+      paystackReference: reference,
+      authorizationUrl: paymentResult.authorizationUrl,
+      status: 'pending',
+      type: 'wallet_topup'
+    })
+
+    res.json({
+      success: true,
+      authorizationUrl: paymentResult.authorizationUrl,
+      accessCode: paymentResult.accessCode,
+      reference: reference,
+      amount: amount,
+      message: 'Payment initialized. Redirecting to Paystack...'
+    })
+  } catch (error) {
+    console.error('POST /api/funds/add error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST /api/funds/verify
+app.post('/api/funds/verify', authenticateUser, async (req, res) => {
+  try {
+    const { reference } = req.body
+    const uid = req.user.uid
+
+    if (!reference) {
+      return res.status(400).json({ success: false, error: 'Reference required' })
+    }
+
+    const verifyResult = await verifyPayment(reference)
+    if (!verifyResult.success) {
+      return res.status(400).json({ success: false, error: verifyResult.error })
+    }
+
+    const walletResult = await addToWallet(uid, verifyResult.amount)
+    if (!walletResult.success) {
+      return res.status(500).json({ success: false, error: 'Failed to update wallet' })
+    }
+
+    res.json({
+      success: true,
+      message: `Wallet topped up with $${verifyResult.amount}`,
+      newBalance: walletResult.newBalance,
+      amount: verifyResult.amount,
+      reference: reference
+    })
+  } catch (error) {
+    console.error('POST /api/funds/verify error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET /api/funds/public-key
+app.get('/api/funds/public-key', (req, res) => {
+  res.json({
+    publicKey: PAYSTACK_PUBLIC_KEY,
+    message: 'Paystack public key'
+  })
+})
+
+// GET /api/messages
 app.get('/api/messages', async (req, res) => {
   try {
     if (!redis) {
-      return res.json({ ok: false, messages: [], message: 'Redis not available' })
+      return res.json({ ok: false, messages: [] })
     }
     
     const msgs = await redis.lrange('tg_messages', 0, 99)
@@ -294,44 +947,28 @@ app.get('/api/messages', async (req, res) => {
       })
     })
   } catch (error) {
-    console.error('Get messages error:', error)
     res.json({ ok: false, messages: [], error: error.message })
   }
 })
 
-/**
- * GET /api/wallet
- * Get wallet balance from Redis payments
- */
-app.get('/api/wallet', async (req, res) => {
+// GET /api/wallet
+app.get('/api/wallet', authenticateUser, async (req, res) => {
   try {
-    if (!redis) return res.json({ balance: 0 })
-    
-    const payments = await redis.lrange('payments', 0, -1)
-    const balance = payments.reduce((sum, p) => {
-      try {
-        return sum + JSON.parse(p).amount
-      } catch {
-        return sum
-      }
-    }, 0)
-    
-    res.json({ balance })
+    const user = await getUser(req.user.uid)
+    res.json({ balance: user?.wallet || 0 })
   } catch (error) {
-    console.error('Wallet error:', error)
     res.json({ balance: 0 })
   }
 })
 
-// Paystack callback webhook
+// POST /paystack/webhook
 app.post('/paystack/webhook', async (req, res) => {
   try {
     const { data } = req.body
 
-    if (data.status === 'success') {
+    if (data?.status === 'success') {
       const amountInUSD = data.amount / 100
 
-      // Store payment in Redis
       if (redis) {
         const paymentObj = {
           transaction_id: data.id,
@@ -343,21 +980,16 @@ app.post('/paystack/webhook', async (req, res) => {
         await redis.lpush('payments', JSON.stringify(paymentObj))
       }
 
-      // Notify admin via Telegram
       if (bot) {
         const message = `
 💰 **NEW PAYMENT VERIFIED**
-━━━━━━━━━━━━━━━━━━━━━━━━━
-💵 Amount: $${amountInUSD} ${data.currency}
-📧 Email: ${data.customer.email}
-👤 Customer: ${data.customer.name || 'Unknown'}
-🆔 Transaction ID: \`${data.reference}\`
-⏰ Time: ${new Date().toLocaleString()}
-        `
+💵 Amount: $${amountInUSD}
+📧 Email: ${data.customer?.email}
+👤 Customer: ${data.customer?.name || 'Unknown'}
+🆔 Transaction: \`${data.reference}\``
         await bot.sendMessage(DEFAULT_CHAT_ID, message, { parse_mode: 'Markdown' })
       }
 
-      // Emit real-time update to connected clients
       io.emit('wallet_update', { 
         balance: amountInUSD,
         message: 'Wallet updated!'
@@ -371,83 +1003,62 @@ app.post('/paystack/webhook', async (req, res) => {
   }
 })
 
-// ================= PAYSTACK PUBLIC KEY ================= 
+// GET /paystack-public-key
 app.get('/paystack-public-key', (req, res) => {
   res.json({ publicKey: PAYSTACK_PUBLIC_KEY })
 })
 
-// ================= HEALTH CHECK ================= 
+// GET /health
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    server: 'Prime SMS Hub',
+    server: 'Prime SMS Hub v2.0',
     timestamp: new Date().toISOString(),
     features: {
       sms_hub: '✅',
       support_chat: '✅',
+      payments: PAYSTACK_PUBLIC_KEY ? '✅' : '❌',
       telegram_bot: bot ? '✅' : '❌',
-      paystack: PAYSTACK_PUBLIC_KEY ? '✅' : '❌',
+      firebase: db ? '✅' : '❌',
       redis: redis ? '✅' : '❌',
       websocket: '✅'
     }
   })
 })
 
-// ================= TELEGRAM LINK ================= 
-app.post('/api/auth/link-telegram', authenticateUser, async (req, res) => {
-  try {
-    const { chatId } = req.body
-    const uid = req.user.uid
-
-    if (!chatId) {
-      return res.status(400).json({ success: false, error: 'Chat ID required' })
-    }
-
-    // Link Telegram user to Firebase user
-    if (primeSMSBot) {
-      primeSMSBot.linkUserToTelegram(chatId, uid)
-    }
-
-    res.json({
-      success: true,
-      message: 'Telegram account linked successfully'
-    })
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
-  }
-})
-
-// ================= ERROR HANDLING ================= 
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint not found',
-    path: req.path
-  })
-})
-
-app.use(errorHandler)
-
 // ================= START SERVER ================= 
 server.listen(PORT, () => {
   console.log(`
-╔════════════════════════════════════════════╗
-║   🚀 Prime SMS Hub Server Started         ║
-╠════════════════════════════════════════════╣
-║ Port: ${PORT.toString().padEnd(31)}║
-║ Environment: ${(process.env.NODE_ENV || 'production').padEnd(25)}║
-║ SMS Hub: ✅ Enabled                       ║
-║ Support Chat: ✅ Enabled                  ║
-║ Telegram Bot: ${bot ? '✅ Enabled'.padEnd(26) : '⚠️  Disabled'.padEnd(26)}║
-║ Paystack: ${PAYSTACK_PUBLIC_KEY ? '✅ Configured'.padEnd(22) : '⚠️  Not configured'.padEnd(22)}║
-║ 5sim: ${FIVESIM_API_KEY ? '✅ Configured'.padEnd(23) : '⚠️  Not configured'.padEnd(23)}║
-║ Redis: ${redis ? '✅ Connected'.padEnd(23) : '⚠️  Disabled'.padEnd(23)}║
-╚════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════╗
+║   🚀 Prime SMS Hub v2.0 - UNIFIED SERVER     ║
+╠═══════════════════════════════════════════════╣
+║ Port: ${PORT.toString().padEnd(35)}║
+║ Mode: ${(process.env.NODE_ENV || 'production').padEnd(37)}║
+║ SMS Hub: ✅ Enabled                          ║
+║ Support Chat: ✅ Enabled                     ║
+║ Telegram Bot: ${bot ? '✅ Enabled'.padEnd(33) : '⚠️  Disabled'.padEnd(33)}║
+║ Paystack: ${PAYSTACK_PUBLIC_KEY ? '✅ Configured'.padEnd(31) : '⚠️  Not set'.padEnd(31)}║
+║ 5sim: ${FIVESIM_API_KEY ? '✅ Configured'.padEnd(32) : '⚠️  Not set'.padEnd(32)}║
+║ Firebase: ${db ? '✅ Connected'.padEnd(31) : '⚠️  Not set'.padEnd(31)}║
+║ Redis: ${redis ? '✅ Connected'.padEnd(33) : '⚠️  Disabled'.padEnd(33)}║
+╚═══════════════════════════════════════════════╝
   `);
   
-  if (!TELEGRAM_BOT_TOKEN) console.warn('⚠️  Warning: TELEGRAM_BOT_TOKEN not set');
-  if (!FIVESIM_API_KEY) console.warn('⚠️  Warning: FIVESIM_API_KEY not set');
-  console.log('✅ Server is running and ready to accept connections');
+  console.log('📊 Available APIs:');
+  console.log('   POST   /api/number/buy');
+  console.log('   GET    /api/number/sms/:orderId');
+  console.log('   POST   /api/number/cancel/:orderId');
+  console.log('   POST   /api/number/finish/:orderId');
+  console.log('   GET    /api/dashboard');
+  console.log('   GET    /api/transactions');
+  console.log('   POST   /api/funds/add');
+  console.log('   POST   /api/funds/verify');
+  console.log('   GET    /api/funds/public-key');
+  console.log('   GET    /api/messages (chat)');
+  console.log('   GET    /api/wallet');
+  console.log('   GET    /health (status)');
+  console.log('');
+  console.log('✅ Server ready for requests!');
 })
 
-module.exports = { app, io, bot, primeSMSBot }
+module.exports = { app, io, server, db, bot, redis }
